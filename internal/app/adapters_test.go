@@ -132,6 +132,7 @@ func TestAdapterFetchLimited(t *testing.T) {
 }
 
 func TestAdapterCallAIProtocols(t *testing.T) {
+	picture := previewFixture(t, 1, 1, 0, false)
 	for _, mode := range []string{"chat", "responses"} {
 		t.Run(mode, func(t *testing.T) {
 			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -156,7 +157,7 @@ func TestAdapterCallAIProtocols(t *testing.T) {
 						t.Error("wrong instruction")
 					}
 					content = messages[1].(map[string]any)["content"].([]any)
-					if content[1].(map[string]any)["type"] != "image_url" || content[1].(map[string]any)["image_url"].(map[string]any)["url"] != "data:image/png;base64,aA==" {
+					if content[1].(map[string]any)["type"] != "image_url" || content[1].(map[string]any)["image_url"].(map[string]any)["url"] != picture {
 						t.Error("wrong image")
 					}
 					io.WriteString(w, `{"choices":[{"message":{"content":" ok "}}]}`)
@@ -165,7 +166,7 @@ func TestAdapterCallAIProtocols(t *testing.T) {
 						t.Error("wrong responses request")
 					}
 					content = body["input"].([]any)[0].(map[string]any)["content"].([]any)
-					if content[1].(map[string]any)["type"] != "input_image" || content[1].(map[string]any)["image_url"] != "data:image/png;base64,aA==" {
+					if content[1].(map[string]any)["type"] != "input_image" || content[1].(map[string]any)["image_url"] != picture {
 						t.Error("wrong image")
 					}
 					io.WriteString(w, `{"output":[{"content":[{"type":"reasoning","text":"ignored"},{"type":"output_text","text":" ok "}]}]}`)
@@ -175,7 +176,7 @@ func TestAdapterCallAIProtocols(t *testing.T) {
 				}
 			}))
 			defer server.Close()
-			got, err := CallAI(context.Background(), server.Client(), AIConfig{BaseURL: server.URL + "/v1/models", Mode: mode, Model: "vision", APIKey: "secret"}, "system", "text", []string{"", "data:image/png;base64,aA=="})
+			got, err := CallAI(context.Background(), server.Client(), AIConfig{BaseURL: server.URL + "/v1/models", Mode: mode, Model: "vision", APIKey: "secret"}, "system", "text", []string{picture})
 			if err != nil || got != "ok" {
 				t.Fatalf("%q %v", got, err)
 			}

@@ -34,10 +34,14 @@ func Endpoint(base, name string) string {
 }
 
 func FetchLimited(ctx context.Context, client *http.Client, url string, headers map[string]string, body []byte, max int64) ([]byte, string, error) {
+	return fetchLimited(ctx, client, url, headers, body, max, 90*time.Second)
+}
+
+func fetchLimited(ctx context.Context, client *http.Client, url string, headers map[string]string, body []byte, max int64, timeout time.Duration) ([]byte, string, error) {
 	if max < 0 {
 		return nil, "", errors.New("响应大小限制不能为负数")
 	}
-	ctx, cancel := context.WithTimeout(ctx, 90*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 	method := http.MethodGet
 	if body != nil {
@@ -60,7 +64,7 @@ func FetchLimited(ctx context.Context, client *http.Client, url string, headers 
 	defer response.Body.Close()
 	contentType := response.Header.Get("Content-Type")
 	if response.StatusCode < 200 || response.StatusCode >= 300 {
-		return nil, contentType, fmt.Errorf("远端服务 HTTP %d", response.StatusCode)
+		return nil, contentType, &remoteHTTPError{response.StatusCode, response.Header.Get("Retry-After")}
 	}
 	if response.ContentLength > max {
 		return nil, contentType, errors.New("远端响应超过大小限制")
@@ -210,6 +214,10 @@ func ParseChannel(source, channel string) ([]Post, error) {
 }
 
 func CallAI(ctx context.Context, client *http.Client, ai AIConfig, instruction, text string, images []string) (string, error) {
+	return callAI(ctx, client, ai, instruction, text, images, aiRequestTimeout, waitAIRetry)
+}
+
+func callAI(ctx context.Context, client *http.Client, ai AIConfig, instruction, text string, images []string, timeout time.Duration, wait func(context.Context, time.Duration) error) (string, error) {
 	if ai.Model == "" {
 		return "", errors.New("请先选择多模态模型")
 	}
@@ -221,9 +229,13 @@ func CallAI(ctx context.Context, client *http.Client, ai AIConfig, instruction, 
 		textType, imageType, name = "text", "image_url", "chat/completions"
 	}
 	content := []map[string]any{{"type": textType, "text": text}}
-	for _, image := range images {
-		if image == "" {
-			continue
+	for i, original := range images {
+		if err := ctx.Err(); err != nil {
+			return "", err
+		}
+		image, err := aiImagePreview(original)
+		if err != nil {
+			return "", fmt.Errorf("AI 图片 %d 预览失败：%w", i+1, err)
 		}
 		var value any = image
 		if ai.Mode == "chat" {
@@ -247,7 +259,7 @@ func CallAI(ctx context.Context, client *http.Client, ai AIConfig, instruction, 
 	if ai.APIKey != "" {
 		headers["Authorization"] = "Bearer " + ai.APIKey
 	}
-	data, _, err := FetchLimited(ctx, client, Endpoint(ai.BaseURL, name), headers, body, 8*1024*1024)
+	data, attempts, err := fetchAI(ctx, client, Endpoint(ai.BaseURL, name), headers, body, timeout, wait)
 	if err != nil {
 		return "", err
 	}
@@ -266,7 +278,7 @@ func CallAI(ctx context.Context, client *http.Client, ai AIConfig, instruction, 
 		} `json:"output"`
 	}
 	if err := json.Unmarshal(data, &result); err != nil {
-		return "", err
+		return "", fmt.Errorf("模型响应解析失败（已尝试 %d 次）", attempts)
 	}
 	output := result.OutputText
 	if ai.Mode == "chat" {
@@ -287,7 +299,7 @@ func CallAI(ctx context.Context, client *http.Client, ai AIConfig, instruction, 
 	}
 	output = strings.TrimSpace(output)
 	if output == "" {
-		return "", errors.New("模型返回空内容")
+		return "", fmt.Errorf("模型返回空内容（已尝试 %d 次）", attempts)
 	}
 	return output, nil
 }

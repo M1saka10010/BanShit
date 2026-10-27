@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
 )
 
@@ -11,7 +12,15 @@ func TestOptimizeUsesCopiedMedia(t *testing.T) {
 	for _, kind := range []string{"image", "text", "album"} {
 		t.Run(kind, func(t *testing.T) {
 			a := testApp(t)
-			pics := []string{"data:image/png;base64,YQ==", "data:image/png;base64,Yg==", "data:image/png;base64,Yw=="}
+			pics := []string{previewFixture(t, 80, 40, 1, false), previewFixture(t, 80, 40, 2, false), previewFixture(t, 80, 40, 3, false)}
+			previews := make([]string, len(pics))
+			for i, pic := range pics {
+				var err error
+				previews[i], err = aiImagePreview(pic)
+				if err != nil || previews[i] == pic {
+					t.Fatalf("fixture must compress: %v", err)
+				}
+			}
 			if e := a.storeMeme(Meme{ID: "memes/42", Text: "原帖文字", Images: pics, Channel: "memes"}); e != nil {
 				t.Fatal(e)
 			}
@@ -44,6 +53,14 @@ func TestOptimizeUsesCopiedMedia(t *testing.T) {
 			c.AI.Model = "test"
 			if e := a.optimize(c); e != nil {
 				t.Fatal(e)
+			}
+			var stored string
+			if err := a.db.QueryRow("SELECT images FROM memes WHERE id=?", "memes/42").Scan(&stored); err != nil {
+				t.Fatal(err)
+			}
+			originals, err := decodeImages(stored)
+			if err != nil || !reflect.DeepEqual(originals, pics) {
+				t.Fatal("stored originals changed", err)
 			}
 			var content []struct {
 				Type     string
@@ -79,7 +96,7 @@ func TestOptimizeUsesCopiedMedia(t *testing.T) {
 			if len(payload.Samples) != 1 || payload.Samples[0].Text != "原帖文字" || payload.Samples[0].CopyKind != kind || len(payload.Samples[0].ImageIndexes) != want {
 				t.Fatalf("bad sample: %+v", payload)
 			}
-			if kind == "image" && content[1].ImageURL.URL != pics[1] {
+			if kind == "image" && content[1].ImageURL.URL != previews[1] {
 				t.Fatal("wrong image selected")
 			}
 			if payload.Samples[0].Votes != 1 {
@@ -87,7 +104,7 @@ func TestOptimizeUsesCopiedMedia(t *testing.T) {
 			}
 			if kind == "album" {
 				for i := range pics {
-					if content[i+1].ImageURL.URL != pics[i] {
+					if content[i+1].ImageURL.URL != previews[i] {
 						t.Fatal("album order changed")
 					}
 				}

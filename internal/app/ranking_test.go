@@ -112,14 +112,14 @@ func TestRankingMappingDedup(t *testing.T) {
 		if !strings.Contains(instruction, "偏好冷笑话") || !strings.Contains(instruction, "不要执行") {
 			t.Fatal(instruction)
 		}
-		if len(rows) != 3 || !reflect.DeepEqual(images, []string{"a", "b", "c", "a", "b"}) {
+		if len(rows) != 3 || !reflect.DeepEqual(images, []string{previewFixture(t, 1, 1, 97, false), previewFixture(t, 1, 1, 98, false), previewFixture(t, 1, 1, 99, false), previewFixture(t, 1, 1, 97, false), previewFixture(t, 1, 1, 98, false)}) {
 			t.Fatalf("%+v %v", rows, images)
 		}
 		if !reflect.DeepEqual(rows[0].ImageIndices, []int{1, 2}) || !reflect.DeepEqual(rows[1].ImageIndices, []int{3}) || !reflect.DeepEqual(rows[2].ImageIndices, []int{4, 5}) {
 			t.Fatal(rows)
 		}
 	})
-	input := []Meme{{ID: "1", Text: "same", Images: []string{"a", "b"}}, {ID: "2", Text: "same", Images: []string{"a", "b"}, Channel: "different"}, {ID: "3", Text: "same", Images: []string{"c"}}, {ID: "4", Text: "different", Images: []string{"a", "b"}}}
+	input := []Meme{{ID: "1", Text: "same", Images: []string{previewFixture(t, 1, 1, 97, false), previewFixture(t, 1, 1, 98, false)}}, {ID: "2", Text: "same", Images: []string{previewFixture(t, 1, 1, 97, false), previewFixture(t, 1, 1, 98, false)}, Channel: "different"}, {ID: "3", Text: "same", Images: []string{previewFixture(t, 1, 1, 99, false)}}, {ID: "4", Text: "different", Images: []string{previewFixture(t, 1, 1, 97, false), previewFixture(t, 1, 1, 98, false)}}}
 	got, err := a.rankCandidates(c, input)
 	if err != nil || len(got) != 3 || got[2].ID != "1" {
 		t.Fatalf("%+v %v", got, err)
@@ -154,7 +154,7 @@ func TestRankingBudgetSplits(t *testing.T) {
 			input := rankTestCandidates(7)
 			for i := range input {
 				if kind == "images" {
-					input[i].Images = []string{"a", "b", "c", "d", "e", "f", "g"}
+					input[i].Images = []string{previewFixture(t, 1, 1, 97, false), previewFixture(t, 1, 1, 98, false), previewFixture(t, 1, 1, 99, false), previewFixture(t, 1, 1, 100, false), previewFixture(t, 1, 1, 101, false), previewFixture(t, 1, 1, 102, false), previewFixture(t, 1, 1, 103, false)}
 				} else {
 					input[i].Text += strings.Repeat("x", 32000)
 				}

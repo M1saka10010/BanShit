@@ -152,6 +152,9 @@ func TestOptimizeAndModels(t *testing.T) {
 	if !strings.Contains(w.Body.String(), "vision") {
 		t.Fatal("models missing")
 	}
+	if _, e = a.db.Exec("UPDATE memes SET images=? WHERE id='memes/1'", "[\""+previewFixture(t, 1, 1, 0, false)+"\"]"); e != nil {
+		t.Fatal(e)
+	}
 	if e = a.optimize(a.snapshot()); e != nil {
 		t.Fatal(e)
 	}
