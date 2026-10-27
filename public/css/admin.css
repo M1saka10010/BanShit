@@ -1,0 +1,444 @@
+/* ============================================================
+   BanShit · admin.css
+   后台：刊头、标签页、统计行、配置表单、运行记录、复制记录
+   ============================================================ */
+
+.telegram-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.telegram-heading h2 { margin: 8px 0 0; font-family: var(--serif); }
+.telegram .eyebrow { color: var(--accent); font-size: 11px; letter-spacing: 2px; }
+.telegram .panel { min-width: 0; }
+.telegram .hint { line-height: 1.8; overflow-wrap: anywhere; }
+.telegram-state { font-family: var(--serif); font-size: 22px; color: var(--accent); }
+.telegram-switch { display: flex; align-items: center; gap: 10px; }
+.telegram-switch input { width: auto; accent-color: var(--accent); }
+.telegram form > button { margin-top: 16px; }
+.telegram-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+@media (max-width: 600px) {
+  .telegram-actions button { flex: 1 1 100%; }
+  .telegram-heading > button { width: 100%; }
+}
+
+.admin {
+  padding-top: 40px;
+}
+.admin > .eyebrow {
+  font-size: 12px;
+  letter-spacing: 2px;
+  color: var(--accent);
+}
+.admin h1 {
+  margin: 16px 0 12px;
+  font-family: var(--serif);
+  font-size: clamp(38px, 4.6vw, 56px);
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+.admin h1 .accent {
+  color: var(--accent);
+}
+.admin > .muted {
+  margin: 0 0 22px;
+  font-size: 14px;
+  line-height: 1.8;
+}
+#message {
+  margin: 0 0 22px;
+}
+
+/* ---------- 登录 ---------- */
+.login {
+  max-width: 440px;
+  margin: 40px auto;
+  border-top: 3px solid var(--accent);
+}
+.login h2 {
+  margin: 0 0 8px;
+  font-family: var(--serif);
+  font-size: 24px;
+}
+.login p {
+  font-size: 14px;
+  line-height: 1.8;
+}
+.login button {
+  width: 100%;
+  margin-top: 22px;
+}
+
+/* ---------- 标签页（目录式） ---------- */
+.admin-tabs {
+  display: flex;
+  gap: 4px;
+  margin: 4px 0 26px;
+  border-bottom: 1px solid var(--line);
+  overflow-x: auto;
+}
+.admin-tabs button {
+  padding: 13px 18px;
+  background: transparent;
+  color: var(--muted);
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+.admin-tabs button[aria-selected="true"] {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+  font-weight: 600;
+}
+.admin-tabs button:hover:not(:disabled) {
+  background: transparent;
+  color: var(--text);
+  transform: none;
+  box-shadow: none;
+}
+[role="tabpanel"]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+#panel-activity #copy-history {
+  margin-top: 0;
+}
+
+/* ---------- 统计行（报栏数字） ---------- */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  margin: 0 0 26px;
+  border-top: 2px solid var(--text);
+  border-bottom: 1px solid var(--line);
+}
+.stats > div {
+  padding: 20px 24px;
+  border-left: 1px solid var(--line);
+}
+.stats > div:first-child {
+  border-left: 0;
+  padding-left: 0;
+}
+.stats span {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 2px;
+}
+.stats strong {
+  display: block;
+  margin-top: 10px;
+  font-family: var(--serif);
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 配置表单 ---------- */
+.admin-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+}
+.admin-grid .panel {
+  border-top: 2px solid var(--text);
+}
+.admin-grid h2 {
+  margin: 0 0 4px;
+  font-family: var(--serif);
+  font-size: 19px;
+}
+.admin-grid em {
+  font-style: italic;
+  font-weight: 400;
+  color: var(--accent);
+  margin-right: 8px;
+}
+.field-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.input-action {
+  display: flex;
+  gap: 9px;
+}
+.input-action button {
+  white-space: nowrap;
+}
+.model-picker {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  width: 100%;
+}
+.model-popup {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 6px);
+  inset-inline: 0;
+  max-height: min(300px, 45vh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 5px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--text) 14%, transparent);
+}
+.model-option {
+  padding: 10px 12px;
+  border-radius: 3px;
+  font-size: 13px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+  white-space: normal;
+  cursor: pointer;
+}
+.model-option:hover,
+.model-option[aria-selected="true"] {
+  background: color-mix(in srgb, var(--accent) 12%, var(--bg));
+  color: var(--accent);
+}
+.model-option[aria-selected="true"] {
+  outline: 1px solid var(--accent);
+  outline-offset: -1px;
+}
+.model-empty {
+  margin: 0;
+  padding: 12px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.save-bar {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+}
+
+/* ---------- 运行记录 ---------- */
+.operations {
+  display: flex;
+  justify-content: space-between;
+  gap: 25px;
+}
+.operations > div {
+  min-width: 0;
+}
+.operations h2 {
+  margin: 0 0 14px;
+  font-family: var(--serif);
+  font-size: 19px;
+}
+dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px 22px;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+}
+dt {
+  color: var(--muted);
+  letter-spacing: 1px;
+}
+dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.operation-buttons {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+  min-width: 150px;
+}
+
+/* ---------- 复制记录 ---------- */
+#copy-history {
+  margin-top: 24px;
+}
+#copy-history .section-heading {
+  margin-bottom: 14px;
+}
+.copy-record {
+  padding: 18px 0;
+  border-top: 1px solid var(--line);
+}
+.copy-record-title {
+  margin: 0;
+  color: var(--accent);
+  font-weight: 600;
+}
+.copy-record .meme-text {
+  max-height: 240px;
+  overflow: auto;
+}
+.copy-record-images {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.copy-record-images img {
+  width: 150px;
+  max-width: 100%;
+  height: 150px;
+  object-fit: contain;
+  background: var(--photo);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  transition: border-color 0.2s, transform 0.2s var(--ease);
+}
+.copy-record-images img:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+/* ---------- 后台响应式 ---------- */
+@media (max-width: 1000px) {
+  .admin-grid {
+    grid-template-columns: 1fr;
+  }
+  .panel {
+    padding: 22px;
+  }
+}
+@media (max-width: 600px) {
+  .admin {
+    padding-top: 26px;
+  }
+  .admin h1 {
+    font-size: 34px;
+  }
+  .stats > div {
+    padding: 14px 12px;
+  }
+  .stats strong {
+    font-size: 24px;
+  }
+  .save-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .save-bar button {
+    width: 100%;
+  }
+  .operations {
+    flex-direction: column;
+  }
+  .operation-buttons {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .operation-buttons button {
+    flex: 1;
+  }
+  .field-pair {
+    gap: 10px;
+  }
+  .input-action {
+    flex-wrap: wrap;
+  }
+  .input-action .model-picker {
+    flex-basis: 100%;
+  }
+  .input-action input {
+    flex: 1;
+    min-width: 140px;
+  }
+  .admin-tabs {
+    gap: 0;
+  }
+  .admin-tabs button {
+    flex: 1 1 auto;
+    text-align: center;
+    padding: 12px 6px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+  dl {
+    gap: 8px 14px;
+    font-size: 12px;
+  }
+}
+/* ---------- 操作记录：时间筛选与分页跳转 ---------- */
+.history-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+  margin: 4px 0 24px;
+  padding: 16px 18px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+}
+.history-filter > div {
+  flex: 1;
+  min-width: 190px;
+}
+.history-filter label {
+  margin-top: 0;
+}
+.history-filter input {
+  font-variant-numeric: tabular-nums;
+}
+.history-filter button {
+  white-space: nowrap;
+}
+#copy-history .card-actions {
+  align-items: center;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+#copy-history .card-actions > button {
+  min-width: 96px;
+}
+.history-jump {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-left: auto;
+}
+.history-jump label,
+.history-jump span {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: var(--muted);
+}
+.history-jump input {
+  width: 76px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 600px) {
+  .history-jump {
+    margin-left: 0;
+    width: 100%;
+  }
+  .history-jump input {
+    flex: 1;
+  }
+}

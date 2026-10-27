@@ -1,0 +1,39 @@
+services:
+  banshit:
+    build:
+      context: .
+      args:
+        GO_IMAGE: ${GO_IMAGE:-golang:1.26-alpine}
+        RUNTIME_IMAGE: ${RUNTIME_IMAGE:-alpine:3.23}
+    image: banshit:local
+    restart: unless-stopped
+    user: "10001:10001"
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      BANSHIT_CONFIG: /config/config.json
+      BANSHIT_DATA: /data
+    volumes:
+      - type: bind
+        source: ./deploy/config
+        target: /config
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ./deploy/data
+        target: /data
+        bind:
+          create_host_path: false
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    stop_grace_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

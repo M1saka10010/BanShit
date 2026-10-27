@@ -1,0 +1,13 @@
+# Allow only build inputs; never send local credentials or sessions to Docker.
+**
+!go.mod
+!go.sum
+!main.go
+!LICENSE
+!internal/
+!internal/**
+!public/
+!public/**
+!Dockerfile
+!*.dockerignore
+**/*_test.go

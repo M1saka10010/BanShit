@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 400" role="img" aria-labelledby="title desc">
+  <title id="title">BanShit 搬屎日报社 · 今日粪快乐</title>
+  <desc id="desc">纸色报头、墨色分栏与朱砂印章。戴着编辑帽的便便小编辑捧着报纸，认真为快乐选稿。</desc>
+  <rect width="1040" height="400" fill="#f5f1e6"/>
+  <rect x="14" y="14" width="1012" height="372" fill="none" stroke="#d9d2bc"/>
+  <g font-family="Songti SC, SimSun, serif" fill="#23201a">
+    <text x="40" y="51" font-size="19">BANSHIT / 编辑部来信</text>
+    <text x="1000" y="51" text-anchor="end" font-size="19">第 ∞ 期 · 为快乐腾一点空间</text>
+    <path d="M40 67H1000 M40 73H1000" stroke="#23201a" stroke-width="2"/>
+    <text x="40" y="152" font-size="64" font-weight="700" letter-spacing="4">搬屎日报社</text>
+    <text x="44" y="209" font-size="31">屎海茫茫，替你<tspan fill="#b23a1f" font-weight="700">淘金。</tspan></text>
+    <text x="44" y="251" font-size="20">严肃排版，不太严肃的快乐。</text>
+    <text x="44" y="282" font-size="20">AI 值班选稿，你来一键揣兜。</text>
+  </g>
+  <path d="M622 97V315" stroke="#d9d2bc"/>
+  <g stroke="#23201a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M720 267C688 263 687 229 713 219C697 199 716 180 735 180C722 160 738 145 755 143C774 139 781 122 774 113C806 113 824 135 812 154C842 153 860 174 846 195C880 195 898 224 878 244C902 260 889 287 861 288L735 288Z" fill="#e8d5ad"/>
+    <path d="M735 180Q766 188 793 177 M713 219Q743 229 762 221" fill="none" stroke="#a58b60"/>
+    <path d="M739 143L726 116L774 92L826 116L818 143Z" fill="#fcfaf2"/>
+    <path d="M726 116L779 127L826 116 M779 127L774 92" fill="none"/>
+    <circle cx="767" cy="205" r="5" fill="#23201a"/>
+    <circle cx="818" cy="205" r="5" fill="#23201a"/>
+    <path d="M782 219Q794 231 805 218" fill="none"/>
+    <path d="M711 246L790 257L870 243L865 315L791 326L718 313Z" fill="#fcfaf2"/>
+    <path d="M790 257L791 326 M731 278L774 284 M732 290L773 296 M732 302L757 305 M808 278L850 270 M808 290L850 283 M808 302L834 297" fill="none" stroke="#6f6a59" stroke-width="2"/>
+    <ellipse cx="715" cy="266" rx="12" ry="9" fill="#e8d5ad"/>
+    <ellipse cx="869" cy="262" rx="12" ry="9" fill="#e8d5ad"/>
+    <path d="M743 324L733 333 M843 320L854 329" fill="none"/>
+  </g>
+  <g transform="translate(914 164) rotate(10)" fill="none" stroke="#b23a1f">
+    <rect x="-43" y="-48" width="86" height="96" stroke-width="3"/>
+    <rect x="-37" y="-42" width="74" height="84"/>
+    <g fill="#b23a1f" stroke="none" font-family="Songti SC, SimSun, serif" font-weight="700" text-anchor="middle">
+      <text y="-13" font-size="24">今日</text>
+      <text y="20" font-size="22">粪快乐</text>
+    </g>
+  </g>
+  <path d="M40 347H1000" stroke="#23201a" stroke-width="2"/>
+  <g fill="#6f6a59" font-family="PingFang SC, Microsoft YaHei, system-ui, sans-serif" font-size="17">
+    <text x="40" y="374">Telegram 来稿 · AI 选稿 · 复制反馈</text>
+    <text x="1000" y="374" text-anchor="end">少一点无聊，多一点好笑。</text>
+  </g>
+</svg>

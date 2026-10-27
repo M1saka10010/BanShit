@@ -1,0 +1,22 @@
+{
+  "host": "127.0.0.1",
+  "port": 3000,
+  "adminPassword": "CHANGE-ME-use-a-long-random-password",
+  "secureCookie": false,
+  "trustedProxies": [],
+  "telegram": {
+    "enabled": false,
+    "apiId": 0,
+    "apiHash": ""
+  },
+  "channels": ["memes"],
+  "intervalMinutes": 10,
+  "optimizeEveryHours": 24,
+  "interestPrompt": "寻找有趣、有创意、有传播价值的 meme，偏好令人会心一笑的反差、幽默和巧妙的视觉表达。",
+  "ai": {
+    "baseUrl": "https://api.openai.com/v1",
+    "mode": "chat",
+    "model": "",
+    "apiKey": ""
+  }
+}

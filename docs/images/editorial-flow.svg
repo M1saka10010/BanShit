@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 240" role="img" aria-labelledby="title desc">
+  <title id="title">一份快乐的出刊路线</title>
+  <desc id="desc">Telegram 采集最近图文，AI 相对排序，今日搬运展示推荐，成功复制后上报反馈。有新增反馈时定期优化全站共享偏好，用于下次采集任务的排序。</desc>
+  <rect width="1040" height="240" fill="#f5f1e6"/>
+  <rect x="14" y="14" width="1012" height="212" fill="none" stroke="#d9d2bc"/>
+  <g font-family="PingFang SC, Microsoft YaHei, system-ui, sans-serif" fill="#23201a">
+    <text x="36" y="48" font-size="19" font-weight="700">编辑部流水线 / 快乐不是凭空印出来的</text>
+    <g fill="#fcfaf2" stroke="#23201a" stroke-width="1.5">
+      <path d="M36 73L246 71L248 150L34 152Z"/>
+      <path d="M290 72L498 74L500 151L288 149Z"/>
+      <path d="M542 73L751 71L752 149L540 151Z"/>
+      <path d="M794 72L1004 74L1006 151L792 150Z"/>
+    </g>
+    <g font-size="24" font-weight="700" text-anchor="middle">
+      <text x="141" y="108">Telegram 采集</text>
+      <text x="394" y="108">AI 挑选</text>
+      <text x="646" y="108">今日搬运</text>
+      <text x="899" y="108">复制反馈</text>
+    </g>
+    <g font-size="17" text-anchor="middle" fill="#6f6a59">
+      <text x="141" y="135">公开频道最近图文</text>
+      <text x="394" y="135">比较文字与有序相册</text>
+      <text x="646" y="135">最多 16 条推荐</text>
+      <text x="899" y="135">剪贴板成功后上报</text>
+    </g>
+    <text x="647" y="211" font-size="17" text-anchor="middle" fill="#b23a1f">新增反馈 → 定期优化全站偏好 → 下次排序</text>
+  </g>
+  <g fill="none" stroke="#b23a1f" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M257 111H279L272 104 M279 111L272 118 M509 111H531L524 104 M531 111L524 118 M761 111H783L776 104 M783 111L776 118"/>
+    <path d="M899 160V182H394V160 M387 167L394 160L401 167"/>
+  </g>
+</svg>

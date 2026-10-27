@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>BanShit · 今日粪快乐</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/home.css">
+  <script src="/theme.js"></script>
+  <script src="/js/home.js" type="module"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap header-row">
+      <a class="brand" href="/"><svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true"><rect class="mark-bg" width="64" height="64" rx="10"/><g class="mark-body"><ellipse cx="32" cy="44" rx="20" ry="9"/><ellipse cx="32" cy="33" rx="15" ry="8"/><ellipse cx="32" cy="24" rx="10.5" ry="6.5"/><ellipse cx="32" cy="17" rx="6" ry="4.5"/><circle cx="38.5" cy="13" r="3"/></g><g class="mark-face"><circle cx="26" cy="31" r="2.2"/><circle cx="38" cy="31" r="2.2"/><path d="M27 37.5q5 4 10 0" stroke-width="2" fill="none" stroke-linecap="round"/></g></svg> BanShit <small>搬屎日报社</small></a>
+      <nav class="header-nav" aria-label="站点导航">
+        <button id="theme-toggle" type="button" class="ghost">主题 / 自动</button>
+        <a href="/admin">管理后台 ↗</a>
+      </nav>
+    </div>
+  </header>
+  <main class="wrap">
+    <section class="hero" aria-label="站点介绍">
+      <div class="hero-top">
+        <span class="eyebrow">● 为快乐腾一点空间</span>
+        <span class="dateline">第 ∞ 期 · 每日精选</span>
+      </div>
+      <h1>屎海茫茫，<br>替你<span class="accent">淘金。</span></h1>
+      <p class="standfirst">搬屎工每日潜入 Telegram 深处，只把最对味的那几坨端上来。看见喜欢的，一键揣兜里。</p>
+      <div class="hero-bottom">
+        <span id="feed-meta">搬屎工出发中 💩</span>
+        <button id="reload" class="secondary" type="button">↻ 刷新内容</button>
+      </div>
+      <span class="stamp" aria-hidden="true">搬屎</span>
+    </section>
+    <section class="feed-section" aria-label="梗图内容">
+      <div class="section-heading">
+        <h2><span class="sec-no">№ 01</span>今日搬运</h2>
+        <span class="pill">一键搬走 · 快乐加倍</span>
+      </div>
+      <p id="feed-state" class="empty" role="status">搬屎中，请稍候 💩</p>
+      <div id="feed" class="masonry" aria-busy="true"></div>
+    </section>
+  </main>
+  <footer class="wrap">
+    <span>BanShit © 快乐不打烊</span>
+    <span>本刊由搬屎工自动生成 · 少一点无聊，多一点好笑。</span>
+  </footer>
+  <div id="toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>

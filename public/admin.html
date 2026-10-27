@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>控制台 · BanShit</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/admin.css">
+  <script src="/theme.js"></script>
+  <script src="/js/admin.js" type="module"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap header-row">
+      <a class="brand" href="/"><svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true"><rect class="mark-bg" width="64" height="64" rx="10"/><g class="mark-body"><ellipse cx="32" cy="44" rx="20" ry="9"/><ellipse cx="32" cy="33" rx="15" ry="8"/><ellipse cx="32" cy="24" rx="10.5" ry="6.5"/><ellipse cx="32" cy="17" rx="6" ry="4.5"/><circle cx="38.5" cy="13" r="3"/></g><g class="mark-face"><circle cx="26" cy="31" r="2.2"/><circle cx="38" cy="31" r="2.2"/><path d="M27 37.5q5 4 10 0" stroke-width="2" fill="none" stroke-linecap="round"/></g></svg> BanShit <small>编辑部</small></a>
+      <nav class="header-nav" aria-label="站点导航">
+        <button id="theme-toggle" type="button" class="ghost">主题 / 自动</button>
+        <a href="/">← 返回首页</a>
+        <button id="logout" class="secondary" hidden>退出登录</button>
+      </nav>
+    </div>
+  </header>
+  <main class="wrap admin">
+    <div class="eyebrow">搬屎自动化 · 指挥中心</div>
+    <h1>搬屎控制台<span class="accent">。</span></h1>
+    <p class="muted">管理内容来源、AI 偏好与采集节奏。</p>
+    <p id="message" class="notice" role="status">正在检查登录状态…</p>
+
+    <section id="login-panel" class="panel login" hidden>
+      <h2>欢迎回来，工头。</h2>
+      <p class="muted">输入管理员密码，继续指挥搬屎。</p>
+      <form id="login-form">
+        <label for="password">管理密码</label>
+        <input id="password" type="password" autocomplete="current-password" required>
+        <button type="submit">进入控制台 →</button>
+      </form>
+    </section>
+
+    <div id="dashboard" hidden>
+      <section id="stats-panel" class="stats" aria-label="运行概览">
+        <div><span>库存屎量</span><strong id="stat-memes">—</strong></div>
+        <div><span>已被搬走</span><strong id="stat-copies">—</strong></div>
+        <div><span>任务状态</span><strong id="stat-running">—</strong></div>
+      </section>
+
+      <form id="config-form" class="admin-grid">
+        <section class="panel">
+          <h2><em>01</em> 内容与节奏</h2>
+          <label for="channels">来源频道</label>
+          <textarea id="channels" rows="5" placeholder="每行一个频道"></textarea>
+          <p class="hint">每行一个频道，也可用英文逗号分隔。</p>
+          <div class="field-pair">
+            <div>
+              <label for="interval">采集间隔（分钟）</label>
+              <input id="interval" type="number" min="1" step="1" required>
+            </div>
+            <div>
+              <label for="optimize-hours">优化间隔（小时）</label>
+              <input id="optimize-hours" type="number" min="1" step="1" required>
+            </div>
+          </div>
+          <label for="interest">兴趣与筛选偏好</label>
+          <textarea id="interest" rows="6" placeholder="告诉 AI 你想看什么样的梗…"></textarea>
+        </section>
+        <section class="panel">
+          <h2><em>02</em> AI 连接</h2>
+          <label for="base-url">API Base URL</label>
+          <input id="base-url" type="url" placeholder="服务商提供的 API 地址" required>
+          <label for="mode">接口模式</label>
+          <select id="mode"><option value="responses">OpenAI Responses</option><option value="chat">OpenAI Chat Completions</option></select>
+          <label for="api-key">API Key <span id="key-status" class="hint"></span></label>
+          <input id="api-key" type="password" autocomplete="new-password" placeholder="留空保留已有密钥">
+          <p class="hint">密钥不回显；留空保存不会清除旧密钥。</p>
+          <label for="model">模型名称</label>
+          <div class="input-action">
+            <div id="model-picker" class="model-picker">
+              <input id="model" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="model-list" aria-describedby="model-message model-help" autocomplete="off" spellcheck="false" placeholder="输入或选择模型" required>
+              <div id="model-popup" class="model-popup" hidden>
+                <div id="model-list" role="listbox" aria-label="可用模型"></div>
+                <p id="model-empty" class="model-empty" role="status" hidden></p>
+              </div>
+            </div>
+            <button id="load-models" type="button" class="secondary">获取模型</button>
+          </div>
+          <p id="model-message" class="hint" role="status">可直接输入模型 ID，或获取服务商模型列表。</p>
+          <p id="model-help" class="hint">输入筛选 · ↑↓ 浏览 · Enter 选择 · Esc 关闭</p>
+        </section>
+        <div class="save-bar">
+          <span class="muted">保存后，新配置将用于后续任务。</span>
+          <button type="submit">保存配置 ↗</button>
+        </div>
+      </form>
+
+      <section id="telegram-panel" class="telegram">
+        <div class="telegram-heading">
+          <div><div class="eyebrow">账号连接 · TELEGRAM</div><h2>让采集多一种方式。</h2></div>
+          <button id="tg-reload" type="button" class="secondary">更新账号状态</button>
+        </div>
+        <p id="tg-message" class="notice" role="status">点击「更新账号状态」开始管理；不会自动发送验证码。</p>
+        <div class="admin-grid">
+          <form id="tg-config" class="panel">
+            <h2><em>01</em> 采集方式与应用凭据</h2>
+            <label class="telegram-switch"><input id="tg-enabled" type="checkbox">启用 Telegram 账号采集</label>
+            <p class="hint">默认使用网页采集。启用后需完成账号登录；保存配置不会自动发送验证码。</p>
+            <label for="tg-api-id">api_id</label>
+            <input id="tg-api-id" type="number" min="1" step="1" autocomplete="off" inputmode="numeric">
+            <label for="tg-api-hash">api_hash <span id="tg-hash-status" class="hint"></span></label>
+            <input id="tg-api-hash" type="password" autocomplete="new-password" spellcheck="false" placeholder="留空保留已有密钥">
+            <p class="hint">api_id / api_hash 来自 my.telegram.org。密钥不回显；更换 api_id 必须填写新的 api_hash。</p>
+            <button type="submit">保存账号配置 ↗</button>
+          </form>
+          <section class="panel">
+            <h2><em>02</em> 登录与会话</h2>
+            <p id="tg-state" class="telegram-state">状态尚未更新</p>
+            <p id="tg-source" class="hint">请先手动更新账号状态。</p>
+            <p id="tg-delivery" class="hint" role="status" hidden></p>
+            <button id="tg-resend" type="button" class="secondary" hidden disabled>重新发送验证码</button>
+            <form id="tg-phone-form" hidden>
+              <label for="tg-phone">手机号（含国家区号）</label>
+              <input id="tg-phone" type="tel" autocomplete="tel" placeholder="+国家区号 手机号" required>
+              <p class="hint">仅用于本次登录，提交后清空，不回显账号手机号。</p>
+              <button type="submit">发送验证码</button>
+            </form>
+            <form id="tg-code-form" hidden>
+              <label for="tg-code">Telegram 验证码</label>
+              <input id="tg-code" type="text" inputmode="numeric" autocomplete="one-time-code" required>
+              <p class="hint">请按上方实际投递方式查收。请求被接受不代表验证码已送达。</p>
+              <button type="submit">验证并登录</button>
+            </form>
+            <form id="tg-password-form" hidden>
+              <label for="tg-password">两步验证密码</label>
+              <input id="tg-password" type="password" autocomplete="current-password" required>
+              <button type="submit">验证密码</button>
+            </form>
+            <p class="hint">请保密 api_hash、验证码、两步验证密码及会话文件。密码提交后清空；会话仅用于本应用的 Telegram 连接。</p>
+            <div class="telegram-actions">
+              <button id="tg-collect" type="button" disabled>立即采集</button>
+              <button id="tg-logout" type="button" class="secondary" disabled>退出 Telegram 会话</button>
+              <button id="tg-reset" type="button" class="secondary">重置本机会话</button>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section id="operations-panel" class="panel operations">
+        <div>
+          <h2>运行记录</h2>
+          <dl>
+            <dt>最近采集</dt>
+            <dd id="last-run">—</dd>
+            <dt>最近优化</dt>
+            <dd id="last-optimization">—</dd>
+            <dt>最近错误</dt>
+            <dd id="last-error">—</dd>
+          </dl>
+        </div>
+        <div class="operation-buttons">
+          <button id="refresh-task" class="secondary" type="button">立即采集</button>
+          <button id="optimize-task" class="secondary" type="button">优化兴趣偏好</button>
+          <button id="reload-status" class="secondary" type="button">更新运行状态</button>
+        </div>
+      </section>
+    </div>
+
+    <section id="copy-history" class="panel" hidden>
+      <div class="section-heading">
+        <h2>用户操作记录</h2>
+        <button id="copies-refresh" class="secondary" type="button">刷新记录</button>
+      </div>
+      <p class="hint">按时间倒序逐次保存并显示复制反馈；重复操作仅在兴趣统计中去重。图片复制附带的文字为原帖上下文。</p>
+      <p id="copies-state" role="status"></p>
+      <form id="copies-filter" class="history-filter">
+        <div><label for="copies-start">开始时间（本地）</label><input id="copies-start" type="datetime-local" step="1"></div>
+        <div><label for="copies-end">结束时间（本地，含边界）</label><input id="copies-end" type="datetime-local" step="1"></div>
+        <button id="copies-apply" type="submit">筛选</button><button id="copies-reset" class="secondary" type="button">清空</button>
+      </form>
+      <div id="copies-list"></div>
+      <div class="card-actions">
+        <button id="copies-prev" class="secondary" type="button" disabled>上一页</button>
+        <button id="copies-next" class="secondary" type="button" disabled>下一页</button>
+        <form id="copies-jump" class="history-jump"><label for="copies-page">跳至</label><input id="copies-page" type="number" min="1" step="1" value="1" required><span>页</span><button id="copies-go" class="secondary" type="submit">跳转</button></form>
+      </div>
+    </section>
+  </main>
+  <footer class="wrap">
+    <span>BanShit © 快乐不打烊</span>
+    <span>让算法懂你的笑点。</span>
+  </footer>
+  <div id="toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>

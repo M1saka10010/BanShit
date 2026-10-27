@@ -1,0 +1,26 @@
+# Local configuration and runtime state
+config.json
+.banshit-config-*
+data/
+/deploy/
+/.env
+/compose.override.yaml
+/compose.override.yml
+*.log
+
+# Local build artifacts
+/banshit
+/banshit.exe
+/dist/
+/release/
+
+# Developer and browser tooling output
+/.mimocode/
+/.playwright-cli/
+/output/
+node_modules/
+
+# Editor and OS files
+.DS_Store
+.vscode/
+.idea/
