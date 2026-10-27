@@ -31,7 +31,14 @@ export function notify(message) {
 /** 将 ISO 时间格式化为本地时间，无效值返回占位文案。 */
 export function dateLabel(value) {
   const date = new Date(value);
-  return value && !Number.isNaN(date.getTime()) ? date.toLocaleString('zh-CN') : '暂无记录';
+  return value && !Number.isNaN(date.getTime()) ? new Intl.DateTimeFormat('zh-CN', {
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
+  }).format(date) : '暂无记录';
+}
+
+export function browserTimeZoneLabel() {
+  return '浏览器本地时区（' + new Intl.DateTimeFormat().resolvedOptions().timeZone + '）';
 }
 
 /** 校验并返回 http(s) 链接，非法或缺失时返回 null。 */

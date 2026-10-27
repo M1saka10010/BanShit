@@ -1,10 +1,12 @@
 package app
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -24,6 +26,12 @@ func (a *App) launch(optimize bool) bool {
 	a.wg.Add(1)
 	go func() {
 		defer a.wg.Done()
+		started := time.Now()
+		kind := "采集"
+		if optimize {
+			kind = "兴趣优化"
+		}
+		log.Printf("任务开始 type=%s", kind)
 		var e error
 		if optimize {
 			e = a.optimize(c)
@@ -40,6 +48,11 @@ func (a *App) launch(optimize bool) bool {
 			a.lastOptimize = time.Now()
 		} else {
 			a.lastRefresh = time.Now()
+		}
+		if e != nil {
+			log.Printf("任务结束 type=%s duration=%s error=%s", kind, time.Since(started).Round(time.Millisecond), collectionLogError(e))
+		} else {
+			log.Printf("任务结束 type=%s duration=%s", kind, time.Since(started).Round(time.Millisecond))
 		}
 	}()
 	return true
@@ -93,12 +106,17 @@ func (a *App) refresh(c Config) (err error) {
 		}
 	}()
 	succeeded := 0
+	mode := "网页"
+	if c.Telegram.Enabled {
+		mode = "Telegram账号"
+	}
 	for _, channel := range c.Channels {
 		if a.ctx.Err() != nil {
 			return a.ctx.Err()
 		}
 		if c.Telegram.Enabled {
 			posts, e := a.collectTelegram(c, channel)
+			newCount := 0
 			if e != nil {
 				problems = append(problems, channel+": "+e.Error())
 			}
@@ -106,6 +124,7 @@ func (a *App) refresh(c Config) (err error) {
 				if e == nil {
 					problems = append(problems, channel+": 未找到可用图文消息（可能仅含不支持的媒体或边界相册）")
 				}
+				logCollectionChannel(mode, channel, 0, 0, e)
 				continue
 			}
 			succeeded++
@@ -118,28 +137,35 @@ func (a *App) refresh(c Config) (err error) {
 					if e := a.storeMeme(post); e != nil {
 						return e
 					}
+					newCount++
 				}
 			}
+			logCollectionChannel(mode, channel, len(posts), newCount, e)
 			continue
 		}
 		b, _, e := FetchLimited(a.ctx, a.client, "https://t.me/s/"+channel, nil, nil, 2<<20)
 		if e != nil {
 			problems = append(problems, channel+": "+e.Error())
+			logCollectionChannel(mode, channel, 0, 0, e)
 			continue
 		}
 		posts, e := ParseChannel(string(b), channel)
 		if e != nil {
 			problems = append(problems, channel+": "+e.Error())
+			logCollectionChannel(mode, channel, 0, 0, e)
 			continue
 		}
 		if len(posts) == 0 {
 			problems = append(problems, channel+": 未找到公开图文消息")
+			logCollectionChannel(mode, channel, 0, 0, errors.New("未找到公开图文消息"))
 			continue
 		}
 		if len(posts) > 30 {
 			posts = posts[len(posts)-30:]
 		}
 		succeeded++
+		newCount := 0
+		var channelError error
 		for _, p := range posts {
 			if a.ctx.Err() != nil {
 				return a.ctx.Err()
@@ -153,8 +179,12 @@ func (a *App) refresh(c Config) (err error) {
 			}
 			if e = a.collectPost(p); e != nil {
 				problems = append(problems, p.ID+": "+e.Error())
+				channelError = e
+			} else {
+				newCount++
 			}
 		}
+		logCollectionChannel(mode, channel, len(posts), newCount, channelError)
 	}
 	if len(c.Channels) > 0 && succeeded == 0 {
 		return nil
@@ -175,6 +205,9 @@ func (a *App) refresh(c Config) (err error) {
 		if err = a.publishFeed(c, ranked, identity); err != nil {
 			return err
 		}
+		log.Printf("排序完成 candidates=%d published=%d", len(pool), len(ranked))
+	} else {
+		log.Printf("排序跳过 reason=内容与偏好未变化 candidates=%d", len(pool))
 	}
 	a.mu.Lock()
 	_, e = a.db.Exec("DELETE FROM memes WHERE id NOT IN (SELECT id FROM memes ORDER BY createdAt DESC LIMIT 500) AND id NOT IN (SELECT memeId FROM copies) AND id NOT IN (SELECT memeId FROM feed)")
@@ -183,6 +216,29 @@ func (a *App) refresh(c Config) (err error) {
 		return e
 	}
 	return nil
+}
+
+func logCollectionChannel(mode, channel string, posts, added int, err error) {
+	if err != nil {
+		log.Printf("频道采集 mode=%s channel=%q candidates=%d added=%d error=%s", mode, channel, posts, added, collectionLogError(err))
+		return
+	}
+	log.Printf("频道采集 mode=%s channel=%q candidates=%d added=%d", mode, channel, posts, added)
+}
+
+// Arbitrary errors can contain URLs, response fragments or credentials.
+func collectionLogError(err error) string {
+	if errors.Is(err, context.Canceled) {
+		return "canceled"
+	}
+	if errors.Is(err, context.DeadlineExceeded) {
+		return "timeout"
+	}
+	var remote *remoteHTTPError
+	if errors.As(err, &remote) {
+		return fmt.Sprintf("http_%d", remote.status)
+	}
+	return "failed_or_warning_check_admin_status"
 }
 func (a *App) collectPost(p Post) error {
 	p.Images = []string{}

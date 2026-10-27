@@ -147,6 +147,7 @@
       <section id="operations-panel" class="panel operations">
         <div>
           <h2>运行记录</h2>
+          <p id="status-time-zone" class="hint">时间按浏览器本地时区显示</p>
           <dl>
             <dt>最近采集</dt>
             <dd id="last-run">—</dd>
@@ -171,7 +172,8 @@
       </div>
       <p class="hint">按时间倒序逐次保存并显示复制反馈；重复操作仅在兴趣统计中去重。图片复制附带的文字为原帖上下文。</p>
       <p id="copies-state" role="status"></p>
-      <form id="copies-filter" class="history-filter">
+      <p id="copies-time-zone" class="hint">记录时间与筛选均使用浏览器本地时区</p>
+      <form id="copies-filter" class="history-filter" aria-describedby="copies-time-zone">
         <div><label for="copies-start">开始时间（本地）</label><input id="copies-start" type="datetime-local" step="1"></div>
         <div><label for="copies-end">结束时间（本地，含边界）</label><input id="copies-end" type="datetime-local" step="1"></div>
         <button id="copies-apply" type="submit">筛选</button><button id="copies-reset" class="secondary" type="button">清空</button>

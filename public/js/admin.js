@@ -2,7 +2,7 @@
 
 /* 管理后台：登录、配置、运行状态、复制记录，按标签页组织。 */
 
-import { $, node, dateLabel, sourceURL } from './lib/dom.js';
+import { $, node, dateLabel, browserTimeZoneLabel, sourceURL } from './lib/dom.js';
 import { api } from './lib/api.js';
 import { initThemeToggle } from './lib/theme.js';
 import { initModelPicker } from './lib/model-picker.js';
@@ -317,6 +317,8 @@ function bindCopies() {
 /* ---------- 启动 ---------- */
 const telegram = initTelegram(request);
 initThemeToggle($('theme-toggle'));
+$('status-time-zone').textContent = '时间按' + browserTimeZoneLabel() + '显示';
+$('copies-time-zone').textContent = '记录时间与筛选均使用' + browserTimeZoneLabel();
 buildTabs();
 bindForms();
 bindCopies();

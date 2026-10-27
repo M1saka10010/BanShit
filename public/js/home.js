@@ -2,7 +2,7 @@
 
 /* 首页：加载推荐信息流，渲染卡片与九宫格预览。 */
 
-import { $, node, dateLabel, sourceURL } from './lib/dom.js';
+import { $, node, dateLabel, browserTimeZoneLabel, sourceURL } from './lib/dom.js';
 import { initThemeToggle } from './lib/theme.js';
 import { openGallery } from './lib/gallery.js';
 
@@ -133,6 +133,7 @@ function poopField() {
 }
 
 initThemeToggle($('theme-toggle'));
+$('time-zone').textContent = '时间按' + browserTimeZoneLabel() + '显示';
 poopField();
 $('reload').addEventListener('click', loadFeed);
 loadFeed();
