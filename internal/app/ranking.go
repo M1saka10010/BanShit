@@ -1,12 +1,14 @@
 package app
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"io"
 	"strings"
+	"sync"
 	"unicode/utf8"
 )
 
@@ -78,7 +80,7 @@ func rankFingerprint(m Meme) [32]byte {
 	return sum
 }
 
-func (a *App) rankBatch(c Config, instruction string, items []Meme) ([]Meme, error) {
+func (a *App) rankBatch(ctx context.Context, c Config, instruction string, items []Meme) ([]Meme, error) {
 	if !rankFits(instruction, items, rankTop) {
 		return nil, fmt.Errorf("排序候选合计超出预算，无法完整比较")
 	}
@@ -86,7 +88,7 @@ func (a *App) rankBatch(c Config, instruction string, items []Meme) ([]Meme, err
 		return append([]Meme(nil), items...), nil
 	}
 	text, images := rankPayload(items)
-	output, err := CallAI(a.ctx, a.client, c.AI, instruction, text, images)
+	output, err := CallAI(ctx, a.client, c.AI, instruction, text, images)
 	if err != nil {
 		return nil, fmt.Errorf("候选排序: %w", err)
 	}
@@ -126,16 +128,16 @@ func (a *App) rankBatch(c Config, instruction string, items []Meme) ([]Meme, err
 	return ranked, nil
 }
 
-func (a *App) mergeRanked(c Config, instruction string, left, right []Meme) ([]Meme, error) {
+func (a *App) mergeRanked(ctx context.Context, c Config, instruction string, left, right []Meme) ([]Meme, error) {
 	if len(left)+len(right) <= rankTop {
 		combined := append(append([]Meme(nil), left...), right...)
 		if rankFits(instruction, combined, rankTop) {
-			return a.rankBatch(c, instruction, combined)
+			return a.rankBatch(ctx, c, instruction, combined)
 		}
 	}
 	merged := make([]Meme, 0, rankTop)
 	for len(left) > 0 && len(right) > 0 && len(merged) < rankTop {
-		pair, err := a.rankBatch(c, instruction, []Meme{left[0], right[0]})
+		pair, err := a.rankBatch(ctx, c, instruction, []Meme{left[0], right[0]})
 		if err != nil {
 			return nil, err
 		}
@@ -154,6 +156,10 @@ func (a *App) mergeRanked(c Config, instruction string, left, right []Meme) ([]M
 }
 
 func (a *App) rankCandidates(c Config, candidates []Meme) ([]Meme, error) {
+	if err := c.AI.normalizeConcurrency(); err != nil {
+		return nil, err
+	}
+	ctx := a.ctx
 	instruction := rankInstruction(c)
 	unique := make([]Meme, 0, len(candidates))
 	seen := map[[32]byte]bool{}
@@ -182,12 +188,14 @@ func (a *App) rankCandidates(c Config, candidates []Meme) ([]Meme, error) {
 		for end < len(unique) && rankFits(instruction, unique[start:end+1], 8) {
 			end++
 		}
-		ranked, err := a.rankBatch(c, instruction, unique[start:end])
-		if err != nil {
-			return nil, err
-		}
-		lists = append(lists, ranked)
+		lists = append(lists, unique[start:end])
 		start = end
+	}
+	lists, err := rankParallel(ctx, c.AI.Concurrency, len(lists), func(ctx context.Context, i int) ([]Meme, error) {
+		return a.rankBatch(ctx, c, instruction, lists[i])
+	})
+	if err != nil {
+		return nil, err
 	}
 	if len(lists) == 1 {
 		return lists[0], nil
@@ -197,25 +205,68 @@ func (a *App) rankCandidates(c Config, candidates []Meme) ([]Meme, error) {
 		for _, list := range lists {
 			finalists = append(finalists, list...)
 		}
-		return a.rankBatch(c, instruction, finalists)
+		return a.rankBatch(ctx, c, instruction, finalists)
 	}
 	for len(lists) > 1 {
-		var next [][]Meme
-		for i := 0; i < len(lists); i += 2 {
+		next, err := rankParallel(ctx, c.AI.Concurrency, (len(lists)+1)/2, func(ctx context.Context, index int) ([]Meme, error) {
+			i := index * 2
 			if i+1 == len(lists) {
-				next = append(next, lists[i])
-				continue
+				return lists[i], nil
 			}
-			merged, err := a.mergeRanked(c, instruction, lists[i], lists[i+1])
-			if err != nil {
-				return nil, err
-			}
-			next = append(next, merged)
+			return a.mergeRanked(ctx, c, instruction, lists[i], lists[i+1])
+		})
+		if err != nil {
+			return nil, err
 		}
 		lists = next
 	}
 	if rankFits(instruction, lists[0], rankTop) {
-		return a.rankBatch(c, instruction, lists[0])
+		return a.rankBatch(ctx, c, instruction, lists[0])
 	}
 	return lists[0], nil
+}
+
+// Each worker owns preprocessing, requests and retries; dependent merge steps stay serial.
+func rankParallel(parent context.Context, concurrency, count int, run func(context.Context, int) ([]Meme, error)) ([][]Meme, error) {
+	ctx, cancel := context.WithCancel(parent)
+	defer cancel()
+	results := make([][]Meme, count)
+	var wg sync.WaitGroup
+	var once sync.Once
+	var firstErr error
+	jobs := make(chan int)
+	for worker := 0; worker < min(concurrency, count); worker++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for i := range jobs {
+				if ctx.Err() != nil {
+					return
+				}
+				result, err := run(ctx, i)
+				if err != nil {
+					once.Do(func() { firstErr = err; cancel() })
+					return
+				}
+				results[i] = result
+			}
+		}()
+	}
+dispatch:
+	for i := 0; i < count; i++ {
+		select {
+		case <-ctx.Done():
+			break dispatch
+		case jobs <- i:
+		}
+	}
+	close(jobs)
+	wg.Wait()
+	if firstErr != nil {
+		return nil, firstErr
+	}
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	return results, nil
 }

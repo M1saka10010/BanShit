@@ -134,6 +134,7 @@ async function loadConfig() {
   $('base-url').value = data.ai.baseUrl;
   $('mode').value = data.ai.mode;
   $('model').value = data.ai.model;
+  $('concurrency').value = data.ai.concurrency || 8;
   $('api-key').value = '';
   $('key-status').textContent = data.ai.hasApiKey ? '（已配置）' : '（未配置）';
   renderStatus(data);
@@ -171,6 +172,7 @@ function bindForms() {
           baseUrl: $('base-url').value.trim(),
           mode: $('mode').value,
           model: $('model').value.trim(),
+          concurrency: Number($('concurrency').value),
           apiKey: $('api-key').value,
         },
       };

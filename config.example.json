@@ -16,6 +16,7 @@
   "ai": {
     "baseUrl": "https://api.openai.com/v1",
     "mode": "chat",
+    "concurrency": 8,
     "model": "",
     "apiKey": ""
   }

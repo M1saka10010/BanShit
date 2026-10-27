@@ -9,6 +9,7 @@ import (
 	"reflect"
 	"sort"
 	"strings"
+	"sync"
 	"testing"
 )
 
@@ -80,7 +81,12 @@ func TestRankingCrossBatch(t *testing.T) {
 	for _, n := range []int{0, 1, 8, 9, 16, 17, 33, 65} {
 		t.Run(fmt.Sprint(n), func(t *testing.T) {
 			var sizes []int
-			a, c := rankingModel(t, nil, func(_ string, rows []rankInput, _ []string) { sizes = append(sizes, len(rows)) })
+			var sizesMu sync.Mutex
+			a, c := rankingModel(t, nil, func(_ string, rows []rankInput, _ []string) {
+				sizesMu.Lock()
+				defer sizesMu.Unlock()
+				sizes = append(sizes, len(rows))
+			})
 			input := rankTestCandidates(n)
 			got, err := a.rankCandidates(c, input)
 			if err != nil || len(got) != min(n, 16) {
@@ -150,7 +156,12 @@ func TestRankingBudgetSplits(t *testing.T) {
 	for _, kind := range []string{"images", "text"} {
 		t.Run(kind, func(t *testing.T) {
 			var sizes []int
-			a, c := rankingModel(t, nil, func(_ string, rows []rankInput, _ []string) { sizes = append(sizes, len(rows)) })
+			var sizesMu sync.Mutex
+			a, c := rankingModel(t, nil, func(_ string, rows []rankInput, _ []string) {
+				sizesMu.Lock()
+				defer sizesMu.Unlock()
+				sizes = append(sizes, len(rows))
+			})
 			input := rankTestCandidates(7)
 			for i := range input {
 				if kind == "images" {
@@ -203,7 +214,7 @@ func TestRankingBudgetBoundaries(t *testing.T) {
 	if rankFits(instruction, single, 1) {
 		t.Fatal("text overflow accepted")
 	}
-	a := &App{}
+	a := &App{ctx: context.Background()}
 	for _, m := range []Meme{single[0], {ID: "x", Images: make([]string, 21)}, {ID: "x", Images: []string{image, image, "x"}}} {
 		if _, err := a.rankCandidates(c, []Meme{m}); err == nil {
 			t.Fatal("oversized item accepted")

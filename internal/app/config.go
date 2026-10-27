@@ -12,11 +12,24 @@ import (
 	"strings"
 )
 
+const defaultAIConcurrency = 8
+
+func (c *AIConfig) normalizeConcurrency() error {
+	if c.Concurrency == 0 {
+		c.Concurrency = defaultAIConcurrency
+	}
+	if c.Concurrency < 1 || c.Concurrency > 32 {
+		return errors.New("模型并发数需为 1–32")
+	}
+	return nil
+}
+
 type AIConfig struct {
-	BaseURL string `json:"baseUrl"`
-	Mode    string `json:"mode"`
-	Model   string `json:"model"`
-	APIKey  string `json:"apiKey,omitempty"`
+	Concurrency int    `json:"concurrency"`
+	BaseURL     string `json:"baseUrl"`
+	Mode        string `json:"mode"`
+	Model       string `json:"model"`
+	APIKey      string `json:"apiKey,omitempty"`
 }
 type Config struct {
 	Telegram           tgcore.TelegramConfig `json:"telegram"`
@@ -35,6 +48,9 @@ type Config struct {
 var channelPattern = regexp.MustCompile("^[a-zA-Z0-9_]{5,32}$")
 
 func validate(c *Config) error {
+	if err := c.AI.normalizeConcurrency(); err != nil {
+		return err
+	}
 	if e := tgcore.ValidateTelegramConfig(c.Telegram); e != nil {
 		return e
 	}
@@ -81,6 +97,9 @@ func (a *App) snapshot() Config { a.mu.Lock(); defer a.mu.Unlock(); return a.con
 
 // Caller holds mu; same-directory rename keeps config changes atomic.
 func (a *App) save(c Config) error {
+	if err := c.AI.normalizeConcurrency(); err != nil {
+		return err
+	}
 	b, e := json.MarshalIndent(c, "", "  ")
 	if e != nil {
 		return e

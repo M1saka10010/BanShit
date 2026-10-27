@@ -73,6 +73,9 @@
           <label for="api-key">API Key <span id="key-status" class="hint"></span></label>
           <input id="api-key" type="password" autocomplete="new-password" placeholder="留空保留已有密钥">
           <p class="hint">密钥不回显；留空保存不会清除旧密钥。</p>
+          <label for="concurrency">模型并发数</label>
+          <input id="concurrency" type="number" min="1" max="32" step="1" value="8" required aria-describedby="concurrency-help">
+          <p id="concurrency-help" class="hint">默认 8，范围 1–32；仅并行独立排序请求，保存后下次任务生效。调高会增加内存占用及服务商限流风险。</p>
           <label for="model">模型名称</label>
           <div class="input-action">
             <div id="model-picker" class="model-picker">

@@ -28,7 +28,7 @@ func (a *App) admin(w http.ResponseWriter, r *http.Request) {
 		a.mu.Lock()
 		s := a.status
 		a.mu.Unlock()
-		reply(w, 200, map[string]any{"channels": c.Channels, "intervalMinutes": c.IntervalMinutes, "optimizeEveryHours": c.OptimizeEveryHours, "interestPrompt": c.InterestPrompt, "ai": map[string]any{"baseUrl": c.AI.BaseURL, "mode": c.AI.Mode, "model": c.AI.Model, "hasApiKey": c.AI.APIKey != ""}, "status": s, "stats": map[string]int{"memes": memes, "copies": copies}})
+		reply(w, 200, map[string]any{"channels": c.Channels, "intervalMinutes": c.IntervalMinutes, "optimizeEveryHours": c.OptimizeEveryHours, "interestPrompt": c.InterestPrompt, "ai": map[string]any{"baseUrl": c.AI.BaseURL, "mode": c.AI.Mode, "model": c.AI.Model, "hasApiKey": c.AI.APIKey != "", "concurrency": c.AI.Concurrency}, "status": s, "stats": map[string]int{"memes": memes, "copies": copies}})
 	case r.URL.Path == "/api/admin/config" && r.Method == "PUT":
 		var next Config
 		if e := decode(w, r, &next); e != nil {
