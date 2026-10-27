@@ -30,7 +30,13 @@ Linux 宿主机设置权限：
 	docker compose up -d --build
 	docker compose logs -f --tail=100 banshit
 
-访问 http://localhost:3000/admin。若宿主机已有本地实例占用 3000，可将 Compose 的端口改为 127.0.0.1:3001:3000，容器内配置仍用 3000。
+默认访问 http://localhost:3000/admin。需要更换宿主机端口时，复制 `.env.example` 为项目根目录的 `.env`（已有文件则直接编辑，不要覆盖），例如设置：
+
+```dotenv
+BANSHIT_PORT=3001
+```
+
+Compose 自动读取 `.env`；未设置或值为空时使用 3000。执行 `docker compose up -d` 应用修改后，访问 http://localhost:3001/admin。仅改变宿主机映射端口，绑定地址仍为 127.0.0.1，容器内配置的 port 必须保持 3000。`BANSHIT_PORT` 是 Compose 插值变量，不是应用自身的环境变量；使用 1–65535 内未被占用的端口。`.env` 已被 Git 忽略。
 
 默认从 Docker Hub 获取基础镜像。网络无法访问 Docker Hub 时，可指定镜像源：
 

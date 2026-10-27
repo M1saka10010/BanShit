@@ -48,6 +48,8 @@ API 地址支持 API 根路径（例如 https://api.openai.com/v1）或完整 ch
 
 ### Docker / Compose
 
+宿主机端口可通过项目根目录的 `.env` 配置：参考 [.env.example](.env.example)，设置 `BANSHIT_PORT=3001` 后访问 `http://localhost:3001/admin`；默认 3000。该变量只控制 Compose 端口映射，容器内端口仍为 3000。
+
 按 [Docker / Compose 部署说明](docs/docker.md) 初始化后再构建启动。镜像以 **UID/GID 10001:10001** 运行；提前创建 `deploy/config`、`deploy/data`，确保服务账号可写，并将模板复制到 `deploy/config/config.json` 后修改密码。**容器内必须设置 `host: "0.0.0.0"`，port 保持 3000**；Compose 的宿主端口默认只绑定 `127.0.0.1:3000`。
 
 必须可写挂载整个 `/config` 和 `/data`，不能只挂载单个 config.json 或只读配置目录。Compose 使用只读根文件系统和 `/tmp` tmpfs，数据挂载仍需可写。基础镜像默认 Go 1.26 Alpine / Alpine 3.23，可用构建变量 `GO_IMAGE`、`RUNTIME_IMAGE` 替换。容器不会自动继承宿主代理，网络与反代设置见部署说明。`docker compose config --quiet` 只验证 Compose 配置语法，不代表镜像构建或容器运行已验证。
