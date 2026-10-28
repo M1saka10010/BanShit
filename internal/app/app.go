@@ -18,13 +18,14 @@ import (
 )
 
 type Meme struct {
-	ID        string   `json:"id"`
-	Text      string   `json:"text"`
-	Images    []string `json:"images"`
-	Channel   string   `json:"channel"`
-	URL       string   `json:"url"`
-	Score     float64  `json:"score"`
-	CreatedAt string   `json:"createdAt"`
+	ID         string   `json:"id"`
+	Text       string   `json:"text"`
+	Images     []string `json:"images"`
+	Thumbnails []string `json:"thumbnails,omitempty"`
+	Channel    string   `json:"channel"`
+	URL        string   `json:"url"`
+	Score      float64  `json:"score"`
+	CreatedAt  string   `json:"createdAt"`
 }
 type Status struct {
 	Running          bool   `json:"running"`
@@ -45,6 +46,7 @@ type App struct {
 	config                    Config
 	configPath                string
 	db                        *sql.DB
+	media                     *mediaStore
 	client                    *http.Client
 	status                    Status
 	sessions                  map[string]time.Time
@@ -103,9 +105,15 @@ func NewApp(configPath, dataPath string) (*App, error) {
 		db.Close()
 		return nil, e
 	}
-	ctx, cancel := context.WithCancel(context.Background())
+	media := &mediaStore{dir: filepath.Join(dataPath, "media")}
+	if e = media.migrate(db); e != nil {
+		db.Close()
+		return nil, e
+	}
+	ctx, cancel := context.WithCancel(context.WithValue(context.Background(), mediaContextKey{}, media))
 	a := &App{config: c, configPath: configPath, db: db, ctx: ctx, cancel: cancel, client: &http.Client{Timeout: 90 * time.Second}, sessions: map[string]time.Time{}, limits: map[string]limit{}}
 	a.status.LastRun = a.meta("lastRun")
+	a.media = media
 	a.status.LastOptimization = a.meta("lastOptimization")
 	a.lastOptimize, _ = time.Parse(time.RFC3339, a.status.LastOptimization)
 	a.tgDir = filepath.Join(dataPath, "telegram")

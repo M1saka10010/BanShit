@@ -30,7 +30,7 @@ function card(meme, index = 0) {
     const grid = node('div', images.length === 1
       ? 'single-preview'
       : 'album-grid' + (images.length === 2 || images.length === 4 ? ' album-grid-two' : ''));
-    images.slice(0, 9).forEach((src, index) => {
+    (meme.thumbnails || images).slice(0, 9).forEach((src, index) => {
       const button = node('button', 'preview-tile');
       button.type = 'button';
       button.setAttribute('aria-label', '查看第 ' + (index + 1) + ' 张，共 ' + images.length + ' 张');

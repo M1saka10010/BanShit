@@ -76,6 +76,10 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	path := r.URL.Path
+	if strings.HasPrefix(path, "/media/") && (r.Method == "GET" || r.Method == "HEAD") {
+		a.serveMedia(w, r)
+		return
+	}
 	if path == "/api/login" && r.Method == "POST" {
 		if a.limited("login:"+a.clientIP(r), 10, 15*time.Minute) {
 			fail(w, 429, "登录尝试过多")

@@ -16,7 +16,7 @@ func TestCopyHistory(t *testing.T) {
 	if !strings.Contains(w.Body.String(), "\"items\":[]") {
 		t.Fatal(w.Body.String())
 	}
-	pics := []string{"data:image/png;base64,YQ==", "data:image/png;base64,Yg=="}
+	pics := []string{previewFixture(t, 8, 8, 1, false), previewFixture(t, 8, 8, 2, false)}
 	if e := a.storeMeme(Meme{ID: "memes/1", Text: "original text", Images: pics, Channel: "memes"}); e != nil {
 		t.Fatal(e)
 	}
@@ -51,7 +51,15 @@ func TestCopyHistory(t *testing.T) {
 	if len(page.Items) != 5 || page.Items[0].ID != 7 || page.NextBefore != 3 {
 		t.Fatal(page)
 	}
-	if len(page.Items[0].Images) != 2 || len(page.Items[1].Images) != 0 || len(page.Items[2].Images) != 1 || page.Items[2].Images[0] != pics[1] {
+	refs, err := a.media.storeImages(pics)
+	if err != nil {
+		t.Fatal(err)
+	}
+	urls, _, _ := publicImages(refs)
+	if strings.Contains(w.Body.String(), "base64") {
+		t.Fatal("base64 exposed")
+	}
+	if len(page.Items[0].Images) != 2 || len(page.Items[1].Images) != 0 || len(page.Items[2].Images) != 1 || page.Items[2].Images[0] != urls[1] {
 		t.Fatal("incorrect copied media")
 	}
 	if strings.Contains(w.Body.String(), "private-cookie") {

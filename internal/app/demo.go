@@ -84,7 +84,7 @@ func runDemo() error {
 	a.status.LastRun = time.Now().UTC().Format(time.RFC3339)
 	a.status.LastError = "演示模式：采集、模型请求与提示词自动优化已禁用。示例为本地生成，并非 Telegram 内容。"
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if strings.HasPrefix(r.URL.Path, "/api/admin/telegram") || r.URL.Path == "/api/admin/models" || r.URL.Path == "/api/admin/refresh" || r.URL.Path == "/api/admin/optimize" {
+		if r.URL.Path == "/api/admin/reevaluate" || strings.HasPrefix(r.URL.Path, "/api/admin/telegram") || r.URL.Path == "/api/admin/models" || r.URL.Path == "/api/admin/refresh" || r.URL.Path == "/api/admin/optimize" {
 			fail(w, 403, "演示模式不调用外部服务，请使用正式模式体验此功能")
 			return
 		}

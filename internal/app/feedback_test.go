@@ -59,6 +59,12 @@ func TestOptimizeUsesCopiedMedia(t *testing.T) {
 				t.Fatal(err)
 			}
 			originals, err := decodeImages(stored)
+			for i, ref := range originals {
+				if err != nil {
+					t.Fatal(err)
+				}
+				originals[i], err = resolveAIImage(a.ctx, ref)
+			}
 			if err != nil || !reflect.DeepEqual(originals, pics) {
 				t.Fatal("stored originals changed", err)
 			}

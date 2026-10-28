@@ -43,7 +43,7 @@ func TestMediaMigration(t *testing.T) {
 }
 func TestMediaCopies(t *testing.T) {
 	a := testApp(t)
-	for _, m := range []Meme{{ID: "memes/1", Text: "pure text", Channel: "memes"}, {ID: "memes/2", Images: []string{"data:image/png;base64,YQ==", "data:image/png;base64,Yg=="}, Channel: "memes"}} {
+	for _, m := range []Meme{{ID: "memes/1", Text: "pure text", Channel: "memes"}, {ID: "memes/2", Images: []string{previewFixture(t, 8, 8, 1, false), previewFixture(t, 8, 8, 2, false)}, Channel: "memes"}} {
 		if e := a.storeMeme(m); e != nil {
 			t.Fatal(e)
 		}

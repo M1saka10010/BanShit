@@ -218,6 +218,9 @@ func CallAI(ctx context.Context, client *http.Client, ai AIConfig, instruction, 
 }
 
 func callAI(ctx context.Context, client *http.Client, ai AIConfig, instruction, text string, images []string, timeout time.Duration, wait func(context.Context, time.Duration) error) (string, error) {
+	if len(instruction)+len(text) > rankTextBytes {
+		return "", errors.New("AI文字请求超过96 KiB限制")
+	}
 	if ai.Model == "" {
 		return "", errors.New("请先选择多模态模型")
 	}
@@ -229,13 +232,22 @@ func callAI(ctx context.Context, client *http.Client, ai AIConfig, instruction, 
 		textType, imageType, name = "text", "image_url", "chat/completions"
 	}
 	content := []map[string]any{{"type": textType, "text": text}}
+	imageBytes := 0
 	for i, original := range images {
 		if err := ctx.Err(); err != nil {
 			return "", err
 		}
+		original, err := resolveAIImage(ctx, original)
+		if err != nil {
+			return "", fmt.Errorf("AI 图片 %d 读取失败：%w", i+1, err)
+		}
 		image, err := aiImagePreview(original)
 		if err != nil {
 			return "", fmt.Errorf("AI 图片 %d 预览失败：%w", i+1, err)
+		}
+		imageBytes += len(image)
+		if imageBytes > rankImageBytes {
+			return "", errors.New("AI 图片请求超过56 MiB限制")
 		}
 		var value any = image
 		if ai.Mode == "chat" {

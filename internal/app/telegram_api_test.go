@@ -129,6 +129,9 @@ func TestTelegramGuards(t *testing.T) {
 
 func TestRefreshTelegramMode(t *testing.T) {
 	a := testApp(t)
+	model, c := rankingModel(t, nil, nil)
+	a.client = model.client
+	a.config.AI = c.AI
 	a.config.Telegram = tgcore.TelegramConfig{Enabled: true, APIID: 12345, APIHash: strings.Repeat("a", 32)}
 	a.config.AI.Model = "test"
 	a.tg = &fakeTelegram{posts: []tgcore.Post{{ID: "memes/9", Text: "account post", Channel: "memes", Images: []string{}, CreatedAt: "2026-01-01T00:00:00.000Z"}}}

@@ -121,6 +121,11 @@ func (a *App) copyHistory(w http.ResponseWriter, r *http.Request) {
 			images = []string{}
 		}
 		hash := sha256.Sum256([]byte(visitor))
+		images, _, err = publicImages(images)
+		if err != nil {
+			fail(w, 500, "图片存储引用无效")
+			return
+		}
 		items = append(items, map[string]any{"id": id, "kind": kind, "imageIndex": index, "visitor": fmt.Sprintf("访客-%x", hash[:6]), "createdAt": created, "memeId": memeID, "text": text, "images": images, "imageCount": total, "channel": channel, "url": url})
 	}
 	if rows.Err() != nil {

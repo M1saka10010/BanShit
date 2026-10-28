@@ -27,11 +27,11 @@ func TestRefreshIsolation(t *testing.T) {
 		rankCalls  int
 		badRanking bool
 	}{
-		{name: "partial success", channels: []string{"broken", "memes"}, body: adapterPostHTML("memes/2", "fresh", "", date), cached: true, warning: "broken:", want: "memes/2,memes/1", rankCalls: 1},
-		{name: "existing candidates", channels: []string{"broken", "memes"}, body: adapterPostHTML("memes/1", "cached", "", date), cached: true, warning: "broken:", want: "memes/1"},
+		{name: "partial success", channels: []string{"broken", "memes"}, body: adapterPostHTML("memes/2", "fresh", "", date), cached: true, warning: "broken:", want: "memes/2,memes/1", rankCalls: 3},
+		{name: "existing candidates", channels: []string{"broken", "memes"}, body: adapterPostHTML("memes/1", "cached", "", date), cached: true, warning: "broken:", want: "memes/1", rankCalls: 1},
 		{name: "all failed with cache", channels: []string{"broken", "empty"}, cached: true, warning: "broken:", want: "old/1"},
 		{name: "all failed without cache", channels: []string{"broken", "empty"}, warning: "empty:", want: "old/1"},
-		{name: "image failure isolated", channels: []string{"memes"}, body: adapterPostHTML("memes/3", "bad image", photo, date) + adapterPostHTML("memes/2", "fresh", "", date), cached: true, warning: "memes/3:", want: "memes/2,memes/1", rankCalls: 1},
+		{name: "image failure isolated", channels: []string{"memes"}, body: adapterPostHTML("memes/3", "bad image", photo, date) + adapterPostHTML("memes/2", "fresh", "", date), cached: true, warning: "memes/3:", want: "memes/2,memes/1", rankCalls: 3},
 		{name: "success without valid candidates", channels: []string{"memes"}, body: adapterPostHTML("memes/3", "bad image", photo, date), warning: "memes/3:", want: "old/1"},
 		{name: "zero channels", channels: []string{}, want: ""},
 		{name: "ranking failure keeps warning", channels: []string{"broken", "memes"}, body: adapterPostHTML("memes/2", "fresh", "", date), cached: true, warning: "broken:", want: "old/1", rankCalls: 1, badRanking: true},

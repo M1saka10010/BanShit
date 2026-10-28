@@ -73,7 +73,7 @@ func TestAPI(t *testing.T) {
 		t.Fatal("secret exposed")
 	}
 	for i := 0; i < 20; i++ {
-		_, e := a.db.Exec("INSERT INTO memes VALUES (?,?,?,?,?,?,?)", fmt.Sprintf("memes/%d", i), "meme", "[\"data:image/png;base64,aA==\"]", "memes", "https://t.me/memes/1", i, fmt.Sprintf("2026-01-%02dT00:00:00Z", i+1))
+		e := a.storeMeme(Meme{ID: fmt.Sprintf("memes/%d", i), Text: "meme", Images: []string{previewFixture(t, 8, 8, byte(i), false)}, Channel: "memes", URL: "https://t.me/memes/1", Score: float64(i), CreatedAt: fmt.Sprintf("2026-01-%02dT00:00:00Z", i+1)})
 		if e != nil {
 			t.Fatal(e)
 		}

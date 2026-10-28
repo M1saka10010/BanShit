@@ -200,7 +200,7 @@ func TestParallelIndexedCompletion(t *testing.T) {
 	}
 }
 
-func TestConcurrentFailureCancelsAndPreservesFeed(t *testing.T) {
+func TestIncrementalCancellationPreservesFeed(t *testing.T) {
 	a := testApp(t)
 	c := a.snapshot()
 	c.AI.Model = "test"
@@ -253,6 +253,7 @@ func TestConcurrentFailureCancelsAndPreservesFeed(t *testing.T) {
 		t.Error("tasks overlapped")
 	}
 	close(release)
+	a.cancel()
 	done := make(chan struct{})
 	go func() { a.wg.Wait(); close(done) }()
 	select {
@@ -261,7 +262,7 @@ func TestConcurrentFailureCancelsAndPreservesFeed(t *testing.T) {
 		a.cancel()
 		t.Fatal("workers leaked")
 	}
-	if canceled.Load() != 1 || calls.Load() != 2 {
+	if canceled.Load() != 1 || calls.Load() != 1 {
 		t.Fatalf("calls=%d canceled=%d", calls.Load(), canceled.Load())
 	}
 	var id string

@@ -20,37 +20,11 @@ func migrateMedia(db *sql.DB) error {
 	if version >= 1 {
 		return tx.Commit()
 	}
-	rows, err := tx.Query("SELECT id,imageData FROM memes")
-	if err != nil {
-		return err
-	}
-	type legacy struct{ id, image string }
-	values := []legacy{}
-	for rows.Next() {
-		var v legacy
-		if err = rows.Scan(&v.id, &v.image); err != nil {
-			rows.Close()
-			return err
-		}
-		values = append(values, v)
-	}
-	err = rows.Err()
-	rows.Close()
-	if err != nil {
-		return err
-	}
 	if _, err = tx.Exec("ALTER TABLE memes RENAME COLUMN imageData TO images; ALTER TABLE copies ADD COLUMN imageIndex INTEGER NOT NULL DEFAULT -1; UPDATE copies SET imageIndex=0 WHERE kind='image'"); err != nil {
 		return err
 	}
-	for _, v := range values {
-		images := []string{}
-		if v.image != "" {
-			images = append(images, v.image)
-		}
-		b, _ := json.Marshal(images)
-		if _, err = tx.Exec("UPDATE memes SET images=? WHERE id=?", string(b), v.id); err != nil {
-			return err
-		}
+	if _, err = tx.Exec("UPDATE memes SET images=CASE WHEN images='' THEN '[]' ELSE json_array(images) END"); err != nil {
+		return err
 	}
 	if _, err = tx.Exec("PRAGMA user_version=1"); err != nil {
 		return err
@@ -79,7 +53,11 @@ func (a *App) storeMeme(m Meme) error {
 	if m.Text == "" && len(m.Images) == 0 {
 		return errors.New("meme 不能没有文字和图片")
 	}
-	b, err := json.Marshal(m.Images)
+	images, err := a.media.storeImages(m.Images)
+	if err != nil {
+		return err
+	}
+	b, err := json.Marshal(images)
 	if err != nil {
 		return err
 	}

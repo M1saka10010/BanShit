@@ -13,7 +13,7 @@ import (
 	"testing"
 )
 
-func rankingModel(t *testing.T, reply func([]rankInput) string, inspect func(string, []rankInput, []string)) (*App, Config) {
+func rankingModel(t *testing.T, reply func([]rankInput) string, inspect func(string, []rankInput, []string), admission ...func(string, []rankInput) string) (*App, Config) {
 	t.Helper()
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var req struct {
@@ -42,7 +42,8 @@ func rankingModel(t *testing.T, reply func([]rankInput) string, inspect func(str
 		for _, part := range content[1:] {
 			images = append(images, part.ImageURL.URL)
 		}
-		if len(payload.Candidates) < 2 {
+		isAdmission := strings.Contains(instruction, "换新准入评审")
+		if len(payload.Candidates) < 2 && !isAdmission {
 			t.Error("single-candidate AI call")
 		}
 		if len(instruction)+len(content[0].Text) > rankTextBytes || len(images) > 20 {
@@ -52,8 +53,12 @@ func rankingModel(t *testing.T, reply func([]rankInput) string, inspect func(str
 			inspect(instruction, payload.Candidates, images)
 		}
 		output := ""
-		if reply != nil {
+		if isAdmission && len(admission) > 0 {
+			output = admission[0](instruction, payload.Candidates)
+		} else if reply != nil {
 			output = reply(payload.Candidates)
+		} else if isAdmission {
+			output = `{"qualified":true,"accept":true,"reason":"合格"}`
 		} else {
 			sort.Slice(payload.Candidates, func(i, j int) bool { return payload.Candidates[i].ID > payload.Candidates[j].ID })
 			rows := []map[string]string{}

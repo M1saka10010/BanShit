@@ -9,13 +9,14 @@ const MAX_HEIGHT = 16000;
 const MAX_PIXELS = 24000000;
 
 export function isImageData(value) {
-  return typeof value === 'string' && /^data:image\/(png|jpe?g|gif|webp|avif|bmp);base64,/i.test(value);
+  return typeof value === 'string' && /^\/media\/[a-f0-9]{64}[.](jpeg|png|webp)$/.test(value);
 }
 
 /** 将 Data URL 图片解码并重新编码为 PNG Blob，附带尺寸安全上限。 */
 export async function pngBlob(dataURL) {
   if (!isImageData(dataURL)) throw new Error('图片格式不可用');
-  const response = await fetch(dataURL);
+  const response = await fetch(dataURL, { credentials: 'same-origin', redirect: 'error' });
+  if (!response.ok) throw new Error('图片加载失败');
   const blob = await response.blob();
   const objectURL = URL.createObjectURL(blob);
   try {

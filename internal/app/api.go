@@ -3,6 +3,7 @@ package app
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strings"
 	"time"
@@ -93,6 +94,12 @@ func (a *App) admin(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		reply(w, 200, map[string]any{"models": models})
+	case r.URL.Path == "/api/admin/reevaluate" && r.Method == "POST":
+		if !a.launchReevaluate() {
+			fail(w, 409, "已有任务正在执行或服务正在关闭")
+			return
+		}
+		reply(w, 202, map[string]bool{"ok": true})
 	case (r.URL.Path == "/api/admin/refresh" || r.URL.Path == "/api/admin/optimize") && r.Method == "POST":
 		if !a.launch(strings.HasSuffix(r.URL.Path, "optimize")) {
 			fail(w, 409, "已有任务正在执行或服务正在关闭")
@@ -120,7 +127,18 @@ func (a *App) feed(w http.ResponseWriter, r *http.Request) {
 	if len(v) != 32 {
 		a.setCookie(w, "visitor", token(16), 31536000)
 	}
-	c := a.snapshot()
+	memes, updated, err := a.feedSnapshot()
+	if err != nil {
+		fail(w, 500, err.Error())
+		return
+	}
+	reply(w, 200, map[string]any{"memes": memes, "updatedAt": updated})
+}
+
+func (a *App) feedSnapshot() ([]Meme, string, error) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	c := a.config
 	memes := []Meme{}
 	if len(c.Channels) > 0 {
 		args := []any{}
@@ -130,27 +148,25 @@ func (a *App) feed(w http.ResponseWriter, r *http.Request) {
 		q := "SELECT m.* FROM feed f JOIN memes m ON m.id=f.memeId WHERE m.channel IN (" + strings.TrimSuffix(strings.Repeat("?,", len(args)), ",") + ") ORDER BY f.position LIMIT 16"
 		rows, e := a.db.Query(q, args...)
 		if e != nil {
-			fail(w, 500, "数据库读取失败")
-			return
+			return nil, "", errors.New("数据库读取失败")
 		}
 		defer rows.Close()
 		for rows.Next() {
 			m, e := scanMeme(rows)
 			if e != nil {
-				fail(w, 500, "数据库读取失败")
-				return
+				return nil, "", errors.New("数据库读取失败")
+			}
+			m.Images, m.Thumbnails, e = publicImages(m.Images)
+			if e != nil {
+				return nil, "", errors.New("图片存储引用无效")
 			}
 			memes = append(memes, m)
 		}
 		if rows.Err() != nil {
-			fail(w, 500, "数据库读取失败")
-			return
+			return nil, "", errors.New("数据库读取失败")
 		}
 	}
-	a.mu.Lock()
-	updated := a.status.LastRun
-	a.mu.Unlock()
-	reply(w, 200, map[string]any{"memes": memes, "updatedAt": updated})
+	return memes, a.status.LastRun, nil
 }
 func (a *App) copyMeme(w http.ResponseWriter, r *http.Request) {
 	if a.limited("copy:"+a.clientIP(r), 60, time.Minute) {

@@ -122,6 +122,7 @@ function renderStatus(data) {
   $('last-optimization').textContent = dateLabel(data.status.lastOptimization);
   $('last-error').textContent = data.status.lastError || '暂无错误，一切正常';
   $('refresh-task').disabled = data.status.running;
+  $('reevaluate-task').disabled = data.status.running;
   $('optimize-task').disabled = data.status.running;
 }
 
@@ -202,9 +203,11 @@ function bindForms() {
   }));
   for (const [id, endpoint, label] of [
     ['refresh-task', 'refresh', '采集'],
+    ['reevaluate-task', 'reevaluate', '重新评估'],
     ['optimize-task', 'optimize', '兴趣优化'],
   ]) {
     $(id).addEventListener('click', (event) => busy(event.currentTarget, async () => {
+      if (endpoint === 'reevaluate' && !confirm('重新评估会重新消耗模型额度，并处理当前全部候选。确认继续？')) return;
       await request('/api/admin/' + endpoint, 'POST');
       message(label + '任务已提交，正在后台执行；可点击「更新运行状态」查看进度。');
     }));
@@ -244,9 +247,9 @@ function copyRecordNode(item) {
   );
   const pictures = node('div', 'copy-record-images');
   item.images.forEach((src, index) => {
-    if (!/^data:image\/(png|jpeg|webp);base64,/.test(src)) return;
+    if (!/^\/media\/[a-f0-9]{64}[.](jpeg|png|webp)$/.test(src)) return;
     const image = document.createElement('img');
-    image.src = src;
+    image.src = src + '/thumb';
     image.alt = '复制图片 ' + (index + 1);
     image.loading = 'lazy';
     pictures.append(image);

@@ -75,7 +75,7 @@
           <p class="hint">密钥不回显；留空保存不会清除旧密钥。</p>
           <label for="concurrency">模型并发数</label>
           <input id="concurrency" type="number" min="1" max="32" step="1" value="8" required aria-describedby="concurrency-help">
-          <p id="concurrency-help" class="hint">默认 8，范围 1–32；仅并行独立排序请求，保存后下次任务生效。调高会增加内存占用及服务商限流风险。</p>
+          <p id="concurrency-help" class="hint">默认 8，范围 1–32；这是并发上限，当前增量插入最多双路比较，1 为串行。保存后下次任务生效。</p>
           <label for="model">模型名称</label>
           <div class="input-action">
             <div id="model-picker" class="model-picker">
@@ -162,6 +162,7 @@
         </div>
         <div class="operation-buttons">
           <button id="refresh-task" class="secondary" type="button">立即采集</button>
+          <button id="reevaluate-task" class="secondary" type="button">重新评估候选</button>
           <button id="optimize-task" class="secondary" type="button">优化兴趣偏好</button>
           <button id="reload-status" class="secondary" type="button">更新运行状态</button>
         </div>
