@@ -17,7 +17,7 @@ globalThis.clearTimeout = () => {};
 globalThis.document = {
   body,
   getElementById: () => toast,
-  querySelector: () => state.modal ? dialog : null,
+  querySelectorAll: () => state.dialogs ?? (state.modal ? [dialog] : []),
   createElement: () => {
     const canvas = {
       getContext: () => ({ drawImage() {}, fillRect() {} }),
@@ -115,6 +115,14 @@ for (const kind of ['image', 'album', 'text']) {
   await copy(kind, { reportError: true });
   assert.match(toast.textContent, /已搬走，但搬运统计没能记上/);
 }
+const fullscreen = parent();
+await copy('text', { dialogs: [dialog, fullscreen] });
+assert.equal(toast.parentNode, fullscreen, 'toast must follow the topmost open dialog');
+assert.match(toast.textContent, /已搬走/);
+await copy('text', { dialogs: [fullscreen, dialog] });
+assert.equal(toast.parentNode, dialog, 'toast must follow the last dialog in document order');
+await copy('text', { dialogs: [] });
+assert.equal(toast.parentNode, body);
 for (const kind of ['image', 'album']) {
   await copy(kind, { blobOnly: true });
   assert.equal(state.constructors, 2);

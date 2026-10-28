@@ -416,8 +416,101 @@ a.source-link:hover {
   height: 60dvh;
 }
 .gallery-stage[hidden],
+.gallery-open-hint[hidden],
 .gallery-zoom-actions[hidden] {
   display: none;
+}
+.gallery-open {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+  max-height: 100%;
+  padding: 0;
+  background: none;
+  border: 0;
+  cursor: zoom-in;
+}
+.gallery-open:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+.gallery-open-hint {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  flex: none;
+}
+.gallery-fullscreen {
+  flex-direction: column;
+  width: 100vw;
+  max-width: none;
+  height: 100dvh;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #fff;
+}
+.gallery-fullscreen::backdrop {
+  background: rgba(0, 0, 0, 0.94);
+}
+.gallery-fullscreen[open] {
+  animation: fullscreen-in 0.2s ease;
+}
+@keyframes fullscreen-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.gallery-fullscreen .gallery-toolbar {
+  margin: 0;
+  padding: 14px 18px;
+  border-bottom-color: rgba(255, 255, 255, 0.18);
+}
+.gallery-fullscreen .gallery-toolbar span {
+  color: rgba(255, 255, 255, 0.75);
+}
+.gallery-fullscreen .gallery-stage {
+  flex: 1;
+  height: auto;
+  min-height: 0;
+}
+.gallery-fullscreen .gallery-image {
+  max-height: 100%;
+  background: transparent;
+  transition: opacity 0.2s ease;
+}
+.gallery-fullscreen .gallery-viewport:not(.is-ready) .gallery-image {
+  opacity: 0.3;
+}
+.gallery-fullscreen .secondary {
+  background: rgba(20, 20, 20, 0.55);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #fff;
+}
+.gallery-fullscreen .secondary:hover:not(:disabled) {
+  border-color: #fff;
+  background: rgba(48, 48, 48, 0.7);
+  color: #fff;
+}
+.gallery-fullscreen .gallery-zoom-actions {
+  margin: 0;
+  padding: 12px 16px 16px;
+}
+.gallery-fullscreen .gallery-zoom-level {
+  color: #fff;
+}
+.gallery-fullscreen .gallery-zoom-hint {
+  color: rgba(255, 255, 255, 0.6);
+}
+.gallery-fullscreen a {
+  color: rgba(255, 255, 255, 0.85);
 }
 .gallery-viewport {
   display: flex;

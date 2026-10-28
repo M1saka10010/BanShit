@@ -17,7 +17,9 @@ let toastTimer;
 /** 底部浮出通知，4.5 秒后自动隐藏。模态对话框打开时移入其中，避免被顶层遮挡。 */
 export function notify(message) {
   const toast = $('toast');
-  const dialog = document.querySelector('dialog.gallery-dialog[open]');
+  // 多层对话框（预览框与全屏查看）同时打开时，通知跟随最顶层。
+  const openDialogs = document.querySelectorAll('dialog.gallery-dialog[open]');
+  const dialog = openDialogs[openDialogs.length - 1];
   if (dialog && toast.parentNode !== dialog) dialog.appendChild(toast);
   if (!dialog && toast.parentNode !== document.body) document.body.appendChild(toast);
   toast.textContent = message;
