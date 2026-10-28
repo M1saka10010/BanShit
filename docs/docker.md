@@ -55,6 +55,8 @@ Compose 自动读取 `.env`；未设置或值为空时使用 3000。执行 `dock
 
 ## 升级和备份
 
+Compose 将 `/tmp` 挂载为上限 256 MiB 的 tmpfs，为 SQLite 查询、排序等操作提供临时空间。容量按实际使用消耗内存，不会启动就全部占用。旧配置的 16 MiB 上限可能导致 `database or disk is full (13)`，即使数据盘仍有空间。升级此设置后执行 `docker compose up -d --force-recreate banshit`，无需重建镜像；已有配置与数据库挂载保留。不要通过删除 WAL 解决空间错误。
+
 升级前先 docker compose stop，安全备份 deploy/config 和整个 deploy/data，再构建新镜像并启动。切勿复制仍在写入的单个 SQLite 文件当作完整备份。Telegram 会话及归档均是敏感授权凭据。停容器不会删除 bind 挂载数据；不要将 deploy/ 放进源码发布包。
 
 标准输出日志使用 Docker 日志驱动轮转；每次任务会记录开始/结束、耗时、频道统计、排序结果和安全错误摘要，可用 docker compose logs 查看。应用仍没有持久化的逐任务运行日志，日志不会包含 API 密钥、验证码、密码、会话或原始远端响应；采集错误也会显示在后台最近状态。服务重启会使后台登录失效，已保存 Telegram 会话可恢复。
