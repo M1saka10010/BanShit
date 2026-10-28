@@ -67,6 +67,7 @@ export function openGallery(meme, start = 0) {
     openHint.hidden = images.length === 0;
     if (images.length) {
       image.src = images[current];
+      openButton.classList.toggle('is-loading', !image.complete || image.naturalWidth === 0);
       openButton.setAttribute('aria-label', '全屏查看第 ' + (current + 1) + ' 张图片');
     }
     image.alt = '第 ' + (current + 1) + ' 张图片';
@@ -184,7 +185,9 @@ export function openGallery(meme, start = 0) {
   next.onclick = () => move(1);
   openButton.onclick = enterFullscreen;
   close.onclick = () => dialog.close();
+  image.onload = () => openButton.classList.remove('is-loading');
   image.onerror = () => {
+    openButton.classList.remove('is-loading');
     message.textContent = '图片加载失败，可切换其他图片。';
   };
   const listeners = new AbortController();

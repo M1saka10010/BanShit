@@ -282,17 +282,18 @@ a.source-link:hover {
 .album-grid .meme-image {
   height: 100%;
   max-height: none;
-  object-fit: cover;
+  /* 完整显示每张图，不裁切；方格内留白衬底 */
+  object-fit: contain;
 }
-/* 剪贴簿式微倾斜，hover 时扶正放大 */
+/* 剪贴簿式微倾斜，hover 时扶正放大；contain 模式下不再放大默认态，避免裁掉方形图的边缘 */
 .album-grid .preview-tile:nth-child(odd) .meme-image {
-  transform: rotate(-0.9deg) scale(1.08);
+  transform: rotate(-0.9deg);
 }
 .album-grid .preview-tile:nth-child(even) .meme-image {
-  transform: rotate(0.9deg) scale(1.08);
+  transform: rotate(0.9deg);
 }
 .album-grid .preview-tile:hover:not(:disabled) .meme-image {
-  transform: rotate(0deg) scale(1.12);
+  transform: rotate(0deg) scale(1.05);
 }
 .preview-more {
   position: absolute;
@@ -388,11 +389,18 @@ a.source-link:hover {
   background: var(--panel);
   color: var(--text);
 }
+/* 仅在打开时启用 flex 列布局：关闭的对话框须回落到 UA 的 display:none，
+   否则已关闭的全屏层会以幽灵层形式留在页面上 */
+.gallery-dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
 .gallery-dialog::backdrop {
   background: rgba(0, 0, 0, 0.72);
   backdrop-filter: blur(4px);
 }
 .gallery-toolbar {
+  flex: none;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -409,6 +417,8 @@ a.source-link:hover {
 }
 .gallery-stage {
   position: relative;
+  /* 以 60dvh 为基准，空间不足时允许收缩，避免撑破对话框整体滚动 */
+  flex: 0 1 auto;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -424,8 +434,10 @@ a.source-link:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  max-width: 100%;
-  max-height: 100%;
+  /* 钉满舞台，使图片的 max-width/max-height 百分比有确定解析基准，
+     否则 fit-content 与图片百分比循环依赖，大图会按自然尺寸溢出被裁 */
+  width: 100%;
+  height: 100%;
   padding: 0;
   background: none;
   border: 0;
@@ -435,6 +447,20 @@ a.source-link:hover {
   outline: 2px solid var(--accent);
   outline-offset: 3px;
 }
+/* 按钮钉满舞台后，须压过全局 button hover/active 的上浮、投影与红底 */
+button.gallery-open:hover:not(:disabled),
+button.gallery-open:active:not(:disabled) {
+  background: none;
+  transform: none;
+  box-shadow: none;
+}
+/* 切换图片时淡出旧图，加载完成后淡入（button. 前缀避免命中 body.gallery-open） */
+button.gallery-open .gallery-image {
+  transition: opacity 0.2s ease;
+}
+button.gallery-open.is-loading .gallery-image {
+  opacity: 0.35;
+}
 .gallery-open-hint {
   margin: 10px 0 0;
   color: var(--muted);
@@ -442,7 +468,8 @@ a.source-link:hover {
   flex: none;
 }
 .gallery-fullscreen {
-  flex-direction: column;
+  /* display/flex-direction 由 .gallery-dialog[open] 基础规则提供，
+     不可在此直接写 display:flex，否则关闭后会残留可见的幽灵层 */
   width: 100vw;
   max-width: none;
   height: 100dvh;
@@ -594,17 +621,23 @@ a.source-link:hover {
   cursor: default;
 }
 .gallery-message {
+  flex: none;
   min-height: 18px;
   margin: 10px 0 0;
   color: var(--accent);
   font-size: 13px;
 }
 .preview-text {
+  /* 长文本在自身区域内滚动，不再撑破对话框 */
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow: auto;
   padding: 10px 2px;
   user-select: text;
   border-top: 1px dotted var(--line);
 }
 .preview-actions {
+  flex: none;
   position: sticky;
   bottom: 0;
   margin-top: 14px;
@@ -682,8 +715,6 @@ a.source-link:hover {
     padding: 8px 14px calc(12px + env(safe-area-inset-bottom, 0px));
     border: 0;
     border-radius: 0;
-    display: flex;
-    flex-direction: column;
   }
   /* 顶部抽屉抓手 */
   .gallery-dialog::before {
