@@ -134,3 +134,37 @@ func (a *App) copyHistory(w http.ResponseWriter, r *http.Request) {
 	}
 	reply(w, 200, map[string]any{"items": items, "snapshot": snapshot, "nextBefore": next, "page": page, "pageSize": 5, "total": totalRecords, "totalPages": pages})
 }
+
+// deleteCopy removes one operation record before it feeds a later interest
+// optimization round; the meme loses the copy-based retention bonus at once.
+func (a *App) deleteCopy(w http.ResponseWriter, r *http.Request) {
+	var input struct {
+		ID int64 `json:"id"`
+	}
+	if e := decode(w, r, &input); e != nil {
+		fail(w, 400, e.Error())
+		return
+	}
+	if input.ID < 1 {
+		fail(w, 400, "记录ID无效")
+		return
+	}
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	res, e := a.db.Exec("DELETE FROM copies WHERE id=?", input.ID)
+	if e != nil {
+		fail(w, 500, "删除失败")
+		return
+	}
+	n, e := res.RowsAffected()
+	if e != nil {
+		fail(w, 500, "删除失败")
+		return
+	}
+	if n == 0 {
+		fail(w, 404, "记录不存在")
+		return
+	}
+	a.copyDeletionVersion++
+	reply(w, 200, map[string]bool{"ok": true})
+}

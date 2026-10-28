@@ -49,6 +49,7 @@ type App struct {
 	media                     *mediaStore
 	client                    *http.Client
 	status                    Status
+	copyDeletionVersion       uint64 // guarded by mu; invalidates in-flight optimization
 	sessions                  map[string]time.Time
 	limits                    map[string]limit
 	lastRefresh, lastOptimize time.Time
@@ -98,6 +99,10 @@ func NewApp(configPath, dataPath string) (*App, error) {
 		return nil, e
 	}
 	if e = migrateMedia(db); e != nil {
+		db.Close()
+		return nil, e
+	}
+	if e = migrateCopyIDs(db); e != nil {
 		db.Close()
 		return nil, e
 	}

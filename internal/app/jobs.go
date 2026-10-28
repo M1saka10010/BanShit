@@ -276,6 +276,9 @@ func (a *App) collectPost(p Post) error {
 	return a.storeMeme(p.Meme)
 }
 func (a *App) optimize(c Config) error {
+	a.mu.Lock()
+	deletionVersion := a.copyDeletionVersion
+	a.mu.Unlock()
 	if err := c.AI.normalizeConcurrency(); err != nil {
 		return err
 	}
@@ -334,6 +337,9 @@ func (a *App) optimize(c Config) error {
 	if e != nil {
 		return e
 	}
+	if len(samples) == 0 {
+		return nil
+	}
 	b, e := json.Marshal(map[string]any{"previous": c.InterestPrompt, "samples": samples})
 	if e != nil {
 		return e
@@ -349,6 +355,9 @@ func (a *App) optimize(c Config) error {
 	defer a.mu.Unlock()
 	if a.config.InterestPrompt != c.InterestPrompt {
 		return errors.New("管理员已修改提示词，跳过覆盖")
+	}
+	if a.copyDeletionVersion != deletionVersion {
+		return errors.New("操作记录已删除，丢弃本轮优化结果，下轮重新学习")
 	}
 	if err := a.ctx.Err(); err != nil {
 		return err

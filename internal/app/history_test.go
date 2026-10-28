@@ -148,3 +148,42 @@ func TestCopyHistorySnapshot(t *testing.T) {
 		checkCode(t, req(a, "GET", "/api/admin/copies?snapshot="+q, "", session), 400)
 	}
 }
+
+func TestDeleteCopy(t *testing.T) {
+	a := testApp(t)
+	checkCode(t, req(a, "DELETE", "/api/admin/copies", `{"id":1}`), 401)
+	session := login(t, a)
+	if e := a.storeMeme(Meme{ID: "memes/1", Text: "text", Channel: "memes"}); e != nil {
+		t.Fatal(e)
+	}
+	for i := 0; i < 3; i++ {
+		if _, e := a.db.Exec("INSERT INTO copies(memeId,kind,imageIndex,visitor,createdAt) VALUES('memes/1','text',-1,'visitor','2026-01-01T00:00:00Z')"); e != nil {
+			t.Fatal(e)
+		}
+	}
+	for _, body := range []string{"bad", `{}`, `{"id":0}`, `{"id":-1}`} {
+		checkCode(t, req(a, "DELETE", "/api/admin/copies", body, session), 400)
+	}
+	checkCode(t, req(a, "DELETE", "/api/admin/copies", `{"id":99}`, session), 404)
+	w := req(a, "DELETE", "/api/admin/copies", `{"id":2}`, session)
+	checkCode(t, w, 200)
+	if !strings.Contains(w.Body.String(), `"ok":true`) {
+		t.Fatal(w.Body.String())
+	}
+	var n int
+	if e := a.db.QueryRow("SELECT count(*) FROM copies").Scan(&n); e != nil || n != 2 {
+		t.Fatal(n, e)
+	}
+	w = req(a, "GET", "/api/admin/copies", "", session)
+	checkCode(t, w, 200)
+	var page struct {
+		Items []struct{ ID int }
+	}
+	if e := json.Unmarshal(w.Body.Bytes(), &page); e != nil {
+		t.Fatal(e)
+	}
+	if len(page.Items) != 2 || page.Items[0].ID != 3 || page.Items[1].ID != 1 {
+		t.Fatal("deleted record still listed", page.Items)
+	}
+	checkCode(t, req(a, "DELETE", "/api/admin/copies", `{"id":2}`, session), 404)
+}

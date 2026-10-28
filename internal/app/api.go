@@ -16,6 +16,8 @@ func (a *App) admin(w http.ResponseWriter, r *http.Request) {
 		a.telegramAdmin(w, r)
 	case r.URL.Path == "/api/admin/copies" && r.Method == "GET":
 		a.copyHistory(w, r)
+	case r.URL.Path == "/api/admin/copies" && r.Method == "DELETE":
+		a.deleteCopy(w, r)
 	case r.URL.Path == "/api/admin/config" && r.Method == "GET":
 		var memes, copies int
 		if e := a.db.QueryRow("SELECT count(*) FROM memes").Scan(&memes); e != nil {

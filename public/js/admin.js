@@ -28,6 +28,7 @@ function loginView() {
   sessionVersion++;
   telegram.reset();
   copiesLoading = false;
+  copiesPendingReload = false;
   copiesSnapshot = undefined;
   $('copy-history').hidden = true;
   $('copies-list').replaceChildren();
@@ -223,6 +224,7 @@ let copiesPage = 1, copiesPages = 0;
 let copiesFilters = {};
 let copiesLoading = false;
 let copiesSnapshot;
+let copiesPendingReload = false;
 
 function restoreCopiesFilters() {
   for (const key of ['start', 'end']) {
@@ -255,15 +257,37 @@ function copyRecordNode(item) {
     pictures.append(image);
   });
   row.append(pictures);
+  const actions = node('div', 'copy-record-actions');
   const href = sourceURL(item.url);
   if (href) {
     const link = node('a', 'source-link', '查看原帖 ↗');
     link.href = href;
     link.target = '_blank';
     link.rel = 'noopener noreferrer';
-    row.append(link);
+    actions.append(link);
   }
+  const remove = node('button', 'secondary copy-delete', '删除记录');
+  remove.type = 'button';
+  remove.onclick = (event) => busy(event.currentTarget, async () => {
+    if (!confirm('永久删除记录 #' + item.id + '？该操作不可撤销。记录将不再用于后续学习；正在执行的优化结果会被丢弃。已保存的偏好需手动修正，仅靠该记录留存的原帖也可能随库存清理被回收。')) return;
+    await request('/api/admin/copies', 'DELETE', { id: item.id });
+    row.remove();
+    message('记录 #' + item.id + ' 已删除，不再参与兴趣偏好学习。');
+    await reloadCopiesAfterDelete();
+    renderStatus(await request('/api/admin/config'));
+  });
+  actions.append(remove);
+  row.append(actions);
   return row;
+}
+
+/** 删除记录后刷新列表；若有加载正在进行，结束后自动补一次刷新。 */
+async function reloadCopiesAfterDelete() {
+  if (copiesLoading) {
+    copiesPendingReload = true;
+    return;
+  }
+  await loadCopies(copiesPage, copiesFilters, copiesSnapshot);
 }
 
 async function loadCopies(page = 1, filters = copiesFilters, snapshot) {
@@ -298,6 +322,10 @@ async function loadCopies(page = 1, filters = copiesFilters, snapshot) {
     $('copies-prev').disabled = copiesPage<=1;
     $('copies-next').disabled = copiesPage>=copiesPages;
     $("copies-go").disabled=!copiesPages;$("copies-apply").disabled=false;$("copies-reset").disabled=false;
+    if (copiesPendingReload) {
+      copiesPendingReload = false;
+      void loadCopies(copiesPage, copiesFilters, copiesSnapshot);
+    }
   }
 }
 

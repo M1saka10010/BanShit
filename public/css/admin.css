@@ -312,6 +312,24 @@ dd {
   border-color: var(--accent);
   transform: translateY(-2px);
 }
+.copy-record-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px dotted var(--line);
+}
+.copy-record-actions .source-link {
+  margin: 0;
+  margin-right: auto;
+  border: 0;
+}
+.copy-delete {
+  padding: 7px 14px;
+  font-size: 12px;
+  white-space: nowrap;
+}
 
 /* ---------- 后台响应式 ---------- */
 @media (max-width: 1000px) {
