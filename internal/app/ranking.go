@@ -164,11 +164,12 @@ func (a *App) rankIncremental(c Config, pool []Meme) error {
 			state.Top = append(state.Top[:target], state.Top[target+1:]...)
 		}
 		low, high := 0, len(state.Top)
+		parallel := c.AI.Concurrency > 1
 		if !rankFits(rankInstruction(c), []Meme{m}, 1) {
 			return fmt.Errorf("候选 %q 单条超出排序预算", m.ID)
 		}
 		for low < high {
-			if c.AI.Concurrency > 1 && high-low >= 3 {
+			if parallel && high-low >= 3 {
 				lo, hi := low, high
 				pivots := []int{lo + (hi-lo)/3, lo + 2*(hi-lo)/3}
 				pairs, err := rankParallel(ctx, c.AI.Concurrency, 2, func(ctx context.Context, i int) ([]Meme, error) {
@@ -185,7 +186,10 @@ func (a *App) rankIncremental(c Config, pool []Meme) error {
 					}
 				}
 				if low > high {
-					return errors.New("模型比较不一致，保留上一版首页")
+					// Subjective comparisons need not be transitive. Discard all
+					// constraints for this candidate and finish with serial search.
+					parallel = false
+					low, high = 0, len(state.Top)
 				}
 				continue
 			}
@@ -251,9 +255,23 @@ func (a *App) admitFresh(ctx context.Context, c Config, items []Meme, changed in
 	return parseAdmission(output)
 }
 
+// 模型偶尔把 JSON 包在 Markdown 代码围栏里；严格解析前先剥离。
+func stripJSONFences(output string) string {
+	s := strings.TrimSpace(output)
+	if !strings.HasPrefix(s, "```") {
+		return s
+	}
+	i := strings.IndexByte(s, '\n')
+	if i < 0 {
+		return s
+	}
+	s = strings.TrimSpace(s[i+1:])
+	return strings.TrimSpace(strings.TrimSuffix(s, "```"))
+}
+
 func parseAdmission(output string) (bool, bool, error) {
 	// Only unwrap a single decision; multiple decisions may refer to different candidates.
-	output = strings.TrimSpace(output)
+	output = stripJSONFences(output)
 	if strings.HasPrefix(output, "[") {
 		var decisions []json.RawMessage
 		if err := json.Unmarshal([]byte(output), &decisions); err != nil {
@@ -370,6 +388,7 @@ func (a *App) rankBatch(ctx context.Context, c Config, instruction string, items
 	if err != nil {
 		return nil, fmt.Errorf("候选排序: %w", err)
 	}
+	output = stripJSONFences(output)
 	var result struct {
 		Ranking []struct {
 			ID     string  `json:"id"`

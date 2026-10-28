@@ -233,3 +233,15 @@ func TestRankingBudgetBoundaries(t *testing.T) {
 		t.Fatal("uncomparable albums accepted")
 	}
 }
+
+func TestRankingFencedOutput(t *testing.T) {
+	plain := `{"ranking":[{"id":"000","reason":"ok"},{"id":"001","reason":"ok"}]}`
+	for _, output := range []string{"```json\n" + plain + "\n```", "```\n" + plain + "\n```"} {
+		a, c := rankingModel(t, func([]rankInput) string { return output }, nil)
+		pool := rankTestCandidates(2)
+		ranked, err := a.rankBatch(context.Background(), c, rankInstruction(c), pool)
+		if err != nil || len(ranked) != 2 || ranked[0].ID != "000" {
+			t.Fatalf("fenced output rejected: %v %v", ranked, err)
+		}
+	}
+}

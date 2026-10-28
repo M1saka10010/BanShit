@@ -9,7 +9,12 @@ import (
 func TestAdmissionJSONShapes(t *testing.T) {
 	for _, decision := range []struct{ qualified, accept bool }{{true, true}, {true, false}, {false, false}} {
 		object := fmt.Sprintf(`{"qualified":%t,"accept":%t,"reason":"ok"}`, decision.qualified, decision.accept)
-		for _, output := range []string{object, " \n[ " + object + " ]\t "} {
+		for _, output := range []string{
+			object,
+			" \n[ " + object + " ]\t ",
+			"```json\n" + object + "\n```",
+			"```\n[ " + object + " ]\n```",
+		} {
 			accept, qualified, err := parseAdmission(output)
 			if err != nil || accept != decision.accept || qualified != decision.qualified {
 				t.Fatalf("%s: %t %t %v", output, accept, qualified, err)
@@ -26,6 +31,8 @@ func TestAdmissionJSONShapes(t *testing.T) {
 		`[{"qualified":true,"accept":true,"reason":"ok","extra":1}]`,
 		`[{"qualified":true,"accept":true,"reason":" "}]`,
 		fmt.Sprintf(`[{"qualified":true,"accept":true,"reason":%q}]`, strings.Repeat("中", 1001)),
+		"```json\nnot json\n```",
+		"```",
 	} {
 		if _, _, err := parseAdmission(output); err == nil {
 			t.Fatalf("accepted invalid response: %s", output)
