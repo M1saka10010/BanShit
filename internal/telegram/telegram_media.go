@@ -73,9 +73,12 @@ func (s *telegramService) collect(ctx context.Context, channel string, ops teleg
 	}
 	var peer *tg.InputPeerChannel
 	for _, chat := range resolved.Chats {
-		if c, ok := chat.(*tg.Channel); ok && c.Broadcast && strings.EqualFold(c.Username, channel) {
+		if c, ok := chat.(*tg.Channel); ok && c.Broadcast && telegramChannelUsernameMatches(c, channel) {
 			peer = &tg.InputPeerChannel{ChannelID: c.ID, AccessHash: c.AccessHash}
-			channel = strings.ToLower(c.Username)
+			if c.Username != "" {
+				channel = c.Username
+			}
+			channel = strings.ToLower(channel)
 			break
 		}
 	}
@@ -124,6 +127,19 @@ func (s *telegramService) collect(ctx context.Context, channel string, ops teleg
 		}
 	}
 	return result, warnings.err()
+}
+
+// Collectible public usernames can be present only in Usernames.
+func telegramChannelUsernameMatches(c *tg.Channel, username string) bool {
+	if strings.EqualFold(c.Username, username) {
+		return true
+	}
+	for _, alias := range c.Usernames {
+		if alias.Active && strings.EqualFold(alias.Username, username) {
+			return true
+		}
+	}
+	return false
 }
 
 func telegramMessageGroups(messages []tg.MessageClass, omitBoundary bool) [][]*tg.Message {

@@ -32,12 +32,51 @@ func (p *mediaMockPool) Invoke(ctx context.Context, in bin.Encoder, out bin.Deco
 }
 
 type mediaMockAPI struct {
+	channel                *tg.Channel
 	messages               []tg.MessageClass
 	resolveErr, historyErr error
 }
 
 func (a mediaMockAPI) ContactsResolveUsername(context.Context, *tg.ContactsResolveUsernameRequest) (*tg.ContactsResolvedPeer, error) {
+	if a.channel != nil {
+		return &tg.ContactsResolvedPeer{Chats: []tg.ChatClass{a.channel}}, a.resolveErr
+	}
 	return &tg.ContactsResolvedPeer{Chats: []tg.ChatClass{&tg.Channel{ID: 1, Username: "channel", Broadcast: true}}}, a.resolveErr
+}
+
+func TestMediaCollectChannelUsernames(t *testing.T) {
+	for _, tc := range []struct {
+		name, primary, alias, want string
+		active, broadcast          bool
+	}{
+		{name: "primary", primary: "AcgDaily", broadcast: true, want: "acgdaily"},
+		{name: "active alias only", alias: "ACGDaily", active: true, broadcast: true, want: "acgdaily"},
+		{name: "alias with primary", primary: "otherchannel", alias: "acgdaily", active: true, broadcast: true, want: "otherchannel"},
+		{name: "inactive alias", alias: "acgdaily", broadcast: true},
+		{name: "unrelated alias", alias: "otherchannel", active: true, broadcast: true},
+		{name: "group", alias: "acgdaily", active: true},
+		{name: "no public username", broadcast: true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			a := mediaMockAPI{channel: &tg.Channel{ID: 1, Broadcast: tc.broadcast, Username: tc.primary,
+				Usernames: []tg.Username{{Username: tc.alias, Active: tc.active}}},
+				messages: []tg.MessageClass{&tg.Message{ID: 9, Message: "text"}}}
+			s := &telegramService{}
+			posts, err := s.collect(context.Background(), "@AcgDaily", mediaOps(a, &mediaMockPool{}))
+			if tc.want == "" {
+				if err == nil || len(posts) != 0 {
+					t.Fatal("unsupported channel accepted")
+				}
+				return
+			}
+			if err != nil || len(posts) != 1 {
+				t.Fatalf("posts=%d error=%v", len(posts), err)
+			}
+			if posts[0].Channel != tc.want || posts[0].ID != tc.want+"/9" || posts[0].URL != "https://t.me/"+tc.want+"/9" {
+				t.Fatalf("incorrect post identity: %+v", posts[0])
+			}
+		})
+	}
 }
 func (a mediaMockAPI) MessagesGetHistory(context.Context, *tg.MessagesGetHistoryRequest) (tg.MessagesMessagesClass, error) {
 	return &tg.MessagesMessages{Messages: a.messages}, a.historyErr

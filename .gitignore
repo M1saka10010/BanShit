@@ -16,6 +16,7 @@ data/
 
 # Developer and browser tooling output
 /.mimocode/
+/.playwright/
 /.playwright-cli/
 /output/
 node_modules/
