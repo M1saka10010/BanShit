@@ -91,7 +91,15 @@ export async function copyMeme(meme, kind, button, imageIndex = 0) {
       // 在点击手势内发起剪贴板请求，PNG 转换异步进行。
       const png = kind === 'album' ? albumBlob(meme.images) : pngBlob(meme.images[imageIndex]);
       png.catch(() => {});
-      await navigator.clipboard.write([new ClipboardItem({ 'image/png': png })]);
+      let item;
+      try {
+        item = new ClipboardItem({ 'image/png': png });
+      } catch (error) {
+        if (!(error instanceof TypeError)) throw error;
+        // 旧实现只接受 Blob；支持 Promise 的浏览器仍在点击手势内 write。
+        item = new ClipboardItem({ 'image/png': await png });
+      }
+      await navigator.clipboard.write([item]);
     }
   } catch (error) {
     notify('复制失败，未记录次数。' + (error.message || '请检查剪贴板权限'));

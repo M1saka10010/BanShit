@@ -5,8 +5,28 @@ import (
 	"encoding/json"
 	"github.com/M1saka10010/BanShit/public"
 	"io/fs"
+	"strings"
 	"testing"
 )
+
+func TestClipboardImageCSP(t *testing.T) {
+	w := req(&App{}, "GET", "/", "")
+	checkCode(t, w, 200)
+	for _, directive := range strings.Split(w.Header().Get("Content-Security-Policy"), ";") {
+		fields := strings.Fields(directive)
+		if len(fields) == 0 || fields[0] != "img-src" {
+			continue
+		}
+		sources := " " + strings.Join(fields[1:], " ") + " "
+		for _, source := range []string{"'self'", "blob:"} {
+			if !strings.Contains(sources, " "+source+" ") {
+				t.Fatalf("img-src must permit clipboard image source %s: %s", source, directive)
+			}
+		}
+		return
+	}
+	t.Fatal("missing img-src directive")
+}
 
 func TestStaticAssets(t *testing.T) {
 	a := &App{}

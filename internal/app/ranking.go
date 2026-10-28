@@ -233,6 +233,7 @@ func admissionInstruction(c Config) string {
 
 func (a *App) admitFresh(ctx context.Context, c Config, items []Meme, changed int, original, reset bool) (bool, bool, error) {
 	instruction := admissionInstruction(c) + fmt.Sprintf("\n本轮当前实际换入数：%d；待替换内容来自原首页：%t", changed, original)
+	instruction += "。只审核第一条候选，第二条仅作比较参照；只返回一个审核对象，不要返回数组，也不要为每条候选分别返回结果。"
 	if !original && len(items) > 1 {
 		instruction += "。本次比较不适用新鲜度优待，只有质量更优才可接受。"
 	}
@@ -246,6 +247,25 @@ func (a *App) admitFresh(ctx context.Context, c Config, items []Meme, changed in
 	output, err := CallAI(a.aiContext(ctx), a.client, c.AI, instruction, text, images)
 	if err != nil {
 		return false, false, fmt.Errorf("候选准入: %w", err)
+	}
+	return parseAdmission(output)
+}
+
+func parseAdmission(output string) (bool, bool, error) {
+	// Only unwrap a single decision; multiple decisions may refer to different candidates.
+	output = strings.TrimSpace(output)
+	if strings.HasPrefix(output, "[") {
+		var decisions []json.RawMessage
+		if err := json.Unmarshal([]byte(output), &decisions); err != nil {
+			return false, false, fmt.Errorf("准入JSON无效: %w", err)
+		}
+		if len(decisions) != 1 {
+			return false, false, errors.New("准入数组必须恰好包含一个审核对象")
+		}
+		output = strings.TrimSpace(string(decisions[0]))
+	}
+	if !strings.HasPrefix(output, "{") {
+		return false, false, errors.New("准入JSON必须是审核对象或单元素对象数组")
 	}
 	var result struct {
 		Qualified *bool   `json:"qualified"`
