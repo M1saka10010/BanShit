@@ -170,6 +170,6 @@ func rankingIdentity(c Config, pool []Meme) string {
 }
 
 func rankingPolicy(c Config) string {
-	b, _ := json.Marshal([]string{"admission-top16-v3", rankInstruction(c), admissionInstruction(c), c.AI.BaseURL, c.AI.Model, c.AI.Mode})
+	b, _ := json.Marshal([]string{"admission-top16-v4", rankInstruction(c), admissionInstruction(c), c.AI.BaseURL, c.AI.Model, c.AI.Mode})
 	return fmt.Sprintf("%x", sha256.Sum256(b))
 }
